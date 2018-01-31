@@ -8,11 +8,24 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
+    public enum ETurn
+    {
+        None,
+        Action,
+        Wait
+    }
+    public GameObject CueBall;
+    public List<GameObject> ObjectBalls;
+    public GameObject GuideLine, TouchPoint_Begin, TouchPoint_End;
     public int MaxScore, MaxLife;
-    protected int Score, Life;
-    private bool bShot;
+    public float DistanceToPower, MaxPower;
 
-    protected ArrayList Balls;
+    protected int Score, Life;
+
+    private ETurn Turn;     // 플레이어 행동 중 여부
+    private Vector2 StartPosition, EndPosition;
+
+    private Rigidbody2D CueBallRB;
 
 	// Use this for initialization
 	void Start ()
@@ -21,45 +34,209 @@ public class GameController : MonoBehaviour
         Score = 0;
         Life = MaxLife;
 
-        
+        // 큐 볼의 RB 를 캐싱한다.
+        if (CueBall != null)
+        {
+            CueBallRB = CueBall.GetComponent<Rigidbody2D>();
+        }
 
+        ResetEffects();
+
+        // 턴 시작
+        StartTurn();
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
-		if (bShot && CheckBallStop())
+        // 턴 확인
+        if (Turn == ETurn.Action)
         {
-            OnTurnEnd();
+            if (CheckTouch() == false)
+                CheckMouse();
         }
-	}
+        else if (Turn == ETurn.Wait && CheckBallStop() == true)
+        {
+            EndTurn();
+        }
 
-    bool CheckBallStop()
+        // 임시 비상 정지
+        if (Input.GetMouseButtonDown(1) == true)
+        {
+            Debug.Log("Stop!");
+
+            CueBallRB.velocity = Vector2.zero;
+
+            for (int i = 0; i < ObjectBalls.Count; ++i)
+            {
+                Rigidbody2D RB = ObjectBalls[i].GetComponent<Rigidbody2D>();
+                if (RB != null)
+                {
+                    RB.velocity = Vector2.zero;
+                }
+            }
+        }
+    }
+
+    private void ResetEffects()
     {
+        // 일단 가이드라인은 숨김
+        GuideLine.SetActive(false);
+
+        // 터치 포인트도 숨김
+        TouchPoint_Begin.SetActive(false);
+        TouchPoint_End.SetActive(false);
+    }
+
+    bool CheckTouch()
+    {
+        if (Input.touchCount < 1)
+            return false;
+
+        // 터치 판단
+        Touch Shot = Input.GetTouch(0);
+        switch (Shot.phase)
+        {
+            case TouchPhase.Began:
+                OnTouchStart(Shot.position);
+                break;
+
+            case TouchPhase.Moved:
+                OnTouchMove(Shot.position);
+                break;
+
+            case TouchPhase.Ended:
+                OnTouchEnd(Shot.position);
+                break;
+
+            case TouchPhase.Canceled:
+                OnTouchEnd(Shot.position);
+                break;
+        }
+
+        return true;
+    }
+
+    bool CheckMouse()
+    {   
+        if (Input.GetMouseButtonDown(0) == true)
+        {
+            OnTouchStart((Vector2)(Camera.main.ScreenToWorldPoint(Input.mousePosition)));
+            return true;
+        }
+        else if (Input.GetMouseButtonUp(0) == true)
+        {
+            OnTouchEnd((Vector2)(Camera.main.ScreenToWorldPoint(Input.mousePosition)));
+            return true;
+        }
+        else if (Input.GetMouseButton(0) == true)
+        {
+            OnTouchMove((Vector2)(Camera.main.ScreenToWorldPoint(Input.mousePosition)));
+            return true;
+        }
+
         return false;
     }
 
-    // 턴 시작 됨
-    void OnTurnStart()
+    void OnTouchStart( Vector2 TouchedPosition )
     {
-        // 플레이어 볼 활성화
+        StartPosition = TouchedPosition;
+
+        TouchPoint_Begin.transform.position = (Vector3)TouchedPosition;
+        TouchPoint_Begin.SetActive(true);
+
+        TouchPoint_End.transform.position = (Vector3)TouchedPosition;
+        TouchPoint_End.SetActive(true);
+
+        GuideLine.SetActive(true);
     }
 
-    // 턴 종료 됨
-    void OnTurnEnd()
+    void OnTouchMove(Vector2 TouchedPosition)
     {
-        // 샷 초기화
-        bShot = false;
+        EndPosition = TouchedPosition;
 
-        // 모든 공의 타격 판단
+        TouchPoint_End.transform.position = (Vector3)TouchedPosition;
 
+        UpdateGuildLine();
+    }
 
-        // 점수 체크
-     //   if (Score >= MaxScore)
+    void OnTouchEnd(Vector2 TouchedPosition)
+    {
+        EndPosition = TouchedPosition;
 
+        GuideLine.SetActive(false);
+        
+        // 터치 포인트도 숨김
+        TouchPoint_Begin.SetActive(false);
+        TouchPoint_End.SetActive(false);
 
-        // 라이프 체크
+        StartShot();
+    }
 
-        // 클리어/종료 판단
+    void UpdateGuildLine()
+    {
+        if (GuideLine == null)
+            return;
+        
+        float Power = Mathf.Min(Vector2.Distance(StartPosition, EndPosition) * DistanceToPower, MaxPower) / DistanceToPower;
+        float Angle = Vector2.SignedAngle(Vector2.up, StartPosition - EndPosition);
+
+        Transform t = GuideLine.GetComponent<Transform>();
+        if (t == null)
+            return;
+
+        Vector3 NewScale = new Vector3(1, Power, 1);
+
+        t.localScale = NewScale;
+        t.rotation = Quaternion.Euler(0.0f, 0.0f, Angle);
+    }
+
+    // 샷 가즈아!
+    void StartShot()
+    {
+        float PowerScalar = Mathf.Min(Vector2.Distance(StartPosition, EndPosition) * DistanceToPower, MaxPower);
+
+        Vector2 Power = (StartPosition - EndPosition).normalized * PowerScalar;
+
+        if (CueBallRB == null)
+            return;
+
+        // 플레이어 턴 종료
+        Turn = ETurn.Wait;
+        
+        CueBallRB.AddForce(Power);
+    }
+
+    // 미세하게 움직이는 공은 세운다.
+    bool CheckBallStop()
+    {
+        if (CueBallRB.velocity != Vector2.zero)
+            return false;
+
+        for (int i = 0; i < ObjectBalls.Count; ++i)
+        {
+            Rigidbody2D RB = ObjectBalls[i].GetComponent<Rigidbody2D>();
+            if (RB != null && RB.velocity != Vector2.zero)
+                return false;
+        }
+
+        return true;
+    }
+
+    void StartTurn()
+    {
+        Turn = ETurn.Action;
+    }
+
+    void EndTurn()
+    {
+        // 스코어 체크
+
+        // 게임 종료 체크
+
+        ResetEffects();
+
+        // 다음 턴 시작
+        StartTurn();
     }
 }
