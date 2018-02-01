@@ -122,11 +122,11 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4235699339318018, guid: 7d2db615feb6cec479bb5b35fc2f37f3, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 4235699339318018, guid: 7d2db615feb6cec479bb5b35fc2f37f3, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -340
       objectReference: {fileID: 0}
     - target: {fileID: 4235699339318018, guid: 7d2db615feb6cec479bb5b35fc2f37f3, type: 2}
       propertyPath: m_LocalPosition.z
@@ -157,6 +157,15 @@ Prefab:
       propertyPath: m_LinearDrag
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1824637670821726, guid: 7d2db615feb6cec479bb5b35fc2f37f3, type: 2}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
+    - target: {fileID: 50909341594052610, guid: 7d2db615feb6cec479bb5b35fc2f37f3,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7d2db615feb6cec479bb5b35fc2f37f3, type: 2}
   m_IsPrefabParent: 0
@@ -175,7 +184,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &290172193
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -283,7 +292,7 @@ GameObject:
   - component: {fileID: 338995897}
   m_Layer: 0
   m_Name: Wall_T
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -609,7 +618,7 @@ GameObject:
   - component: {fileID: 1680358454}
   m_Layer: 0
   m_Name: Wall_B
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -708,7 +717,7 @@ GameObject:
   - component: {fileID: 1780042450}
   m_Layer: 0
   m_Name: Wall_L
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -842,8 +851,13 @@ MonoBehaviour:
   GuideLine: {fileID: 1558463327}
   TouchPoint_Begin: {fileID: 2114642817}
   TouchPoint_End: {fileID: 290172192}
-  MaxScore: 0
-  MaxLife: 0
+  DefaultTurn: 5
+  MaxTurn: 10
+  Score_Miss: -2
+  Score_Save: -1
+  Score_Success: 1
+  Score_3Cushion: 2
+  Score_BankShot: 4
   DistanceToPower: 100
   MaxPower: 100000
 --- !u!1001 &2037804502
@@ -855,11 +869,11 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 174
+      value: -30
       objectReference: {fileID: 0}
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 307
+      value: -340
       objectReference: {fileID: 0}
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.z
@@ -889,6 +903,15 @@ Prefab:
       propertyPath: m_Name
       value: Ball_Object_0
       objectReference: {fileID: 0}
+    - target: {fileID: 1341718048601112, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
+    - target: {fileID: 50539719753882694, guid: b70d25db5ba51364093f434b183c4fb3,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
   m_IsPrefabParent: 0
@@ -901,11 +924,11 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -171
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 325
+      value: 340
       objectReference: {fileID: 0}
     - target: {fileID: 4326588344289980, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_LocalPosition.z
@@ -934,6 +957,15 @@ Prefab:
     - target: {fileID: 1341718048601112, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
       propertyPath: m_Name
       value: Ball_Object_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1341718048601112, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
+      propertyPath: m_TagString
+      value: Ball
+      objectReference: {fileID: 0}
+    - target: {fileID: 50539719753882694, guid: b70d25db5ba51364093f434b183c4fb3,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: b70d25db5ba51364093f434b183c4fb3, type: 2}
@@ -965,7 +997,7 @@ GameObject:
   - component: {fileID: 2108585598}
   m_Layer: 0
   m_Name: Wall_R
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1067,7 +1099,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &2114642818
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1119,7 +1151,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2114642817}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 157, y: 63, z: 2}
+  m_LocalPosition: {x: 0, y: 0, z: 2}
   m_LocalScale: {x: 100, y: 100, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
