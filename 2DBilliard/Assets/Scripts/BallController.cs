@@ -4,12 +4,9 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
-    private bool bTouchedByCueBall;
-
     // Use this for initialization
     void Start()
     {
-        bTouchedByCueBall = false;
     }
 
     // Update is called once per frame
@@ -18,24 +15,7 @@ public class BallController : MonoBehaviour
 
     }
 
-    private void OnCollisionEnter(Collision collision)
+    virtual public void OnTurnStateChanged( GameController.ETurn NewTurnState )
     {
-        if (collision.collider.CompareTag("CueBall"))
-            bTouchedByCueBall = true;
-    }
-
-    public void OnTurnStart()
-    {
-        bTouchedByCueBall = false;
-    }
-
-    public void OnTurnEnd()
-    {
-
-    }
-
-    public bool IsTouchedByCueBall()
-    {
-        return bTouchedByCueBall;
     }
 }

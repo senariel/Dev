@@ -12,70 +12,214 @@ public class GameController : MonoBehaviour
     {
         None,
         Action,
-        Wait
+        Wait,
+        Calc
     }
+    // 수구
     public GameObject CueBall;
+    // 적구
     public List<GameObject> ObjectBalls;
+    // 가이드라인, 터치 이펙트,
     public GameObject GuideLine, TouchPoint_Begin, TouchPoint_End;
-    public int MaxScore, MaxLife;
+    // 기본 턴 수, 최대 턴 수
+    public float DefaultTurn, MaxTurn;
+    // 타격 점수
+    public float Score_Miss, Score_Save, Score_Success, Score_3Cushion, Score_BankShot;
+    // 힘 계산용 값
     public float DistanceToPower, MaxPower;
 
-    protected int Score, Life;
-
-    private ETurn Turn;     // 플레이어 행동 중 여부
+    // 플레이어에게 남은 턴 수
+    protected float Turn = 0.0f;
+    // 현재 턴 진행 상태
+    private ETurn TurnState = ETurn.None;
+    // 수구의 타격 계산용
     private Vector2 StartPosition, EndPosition;
-
-    private Rigidbody2D CueBallRB;
 
 	// Use this for initialization
 	void Start ()
-    {
-        // 점수 초기화
-        Score = 0;
-        Life = MaxLife;
-
-        // 큐 볼의 RB 를 캐싱한다.
-        if (CueBall != null)
-        {
-            CueBallRB = CueBall.GetComponent<Rigidbody2D>();
-        }
-
-        ResetEffects();
+    {        
+        // 턴 수 충전
+        Turn = DefaultTurn;
 
         // 턴 시작
-        StartTurn();
+        SetTurnState(ETurn.Action);
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
         // 턴 확인
-        if (Turn == ETurn.Action)
+        if (TurnState == ETurn.Action)
         {
+            // 입력 확인
             if (CheckTouch() == false)
                 CheckMouse();
         }
-        else if (Turn == ETurn.Wait && CheckBallStop() == true)
+        else if (TurnState == ETurn.Wait && CheckBallStop() == true)
         {
-            EndTurn();
+            SetTurnState(ETurn.Calc);
         }
 
         // 임시 비상 정지
         if (Input.GetMouseButtonDown(1) == true)
         {
-            Debug.Log("Stop!");
+            EmergencyStop();
+        }
+    }
 
-            CueBallRB.velocity = Vector2.zero;
+    // 비상 정지 : 디버깅용
+    void EmergencyStop()
+    {
+        Debug.Log("Stop!");
 
-            for (int i = 0; i < ObjectBalls.Count; ++i)
+        // 모든 공에 알림
+        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
+        foreach (GameObject Ball in Balls)
+        {
+            if (Ball == null)
+                continue;
+
+            Rigidbody2D RB = Ball.GetComponent<Rigidbody2D>();
+            if (RB == null)
+                continue;
+
+            RB.velocity = Vector2.zero;
+        }
+    }
+
+    // 턴 관리
+    void SetTurnState( ETurn NewTurnState )
+    {
+        if (TurnState == NewTurnState)
+            return;
+
+        Debug.Log("SetTurnState : " + TurnState + " -> " + NewTurnState);
+
+        TurnState = NewTurnState;
+
+        switch (NewTurnState)
+        {
+            case ETurn.Action:
+                StartPlayerAction();
+                break;
+
+            case ETurn.Wait:
+                EndPlayerAction();
+                break;
+
+            case ETurn.Calc:
+                CalcResult();
+                break;
+        }
+
+        // 모든 공에 알림
+        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
+        foreach (GameObject Ball in Balls)
+        {
+            if (Ball == null)
+                continue;
+
+            BallController BC = Ball.GetComponent<BallController>();
+            if (BC == null)
+                continue;
+
+            BC.OnTurnStateChanged(NewTurnState);
+        }
+    }
+
+    // 플레이어 액션 시작
+    void StartPlayerAction()
+    {
+        // 연출 초기화
+        ResetEffects();
+
+        // to do. 액션 가능 연출
+
+    }
+
+    // 플레이어 액션 종료
+    void EndPlayerAction()
+    {
+        // to do. 관전 연출?
+    }
+
+    // 점수 계산
+    void CalcResult()
+    {
+        // 맞은 적구 판단
+        // 수구는 최초에 캐싱된 하나만 인정한다.
+        PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
+        if (PC != null)
+        {
+            List<GameObject> TouchedObjects = PC.GetTouchedObjectsList();
+
+            int TouchedBalls = 0;
+            int TouchedWalls = 0;
+            bool bBankShot = false;
+            float Score = Score_Miss;
+            foreach (GameObject TouchedObject in TouchedObjects)
             {
-                Rigidbody2D RB = ObjectBalls[i].GetComponent<Rigidbody2D>();
-                if (RB != null)
+                if (TouchedObject == null)
+                    continue;
+
+                // 적구 타격 먼저 판단
+                if (TouchedObject.CompareTag( "Ball" ))
                 {
-                    RB.velocity = Vector2.zero;
+                    TouchedBalls++;
+
+                    // 첫 적구 터치 시 가락 확인
+                    if (TouchedBalls == 1 && TouchedWalls >= 3 && bBankShot == false)
+                    {
+                        bBankShot = true;
+                    }
+
+                    // 적구 타격 완료 시 계산 완료
+                    if (TouchedBalls >= ObjectBalls.Count)
+                    {
+                        // 성공 시 턴 증감 계산
+                        if (bBankShot)
+                        {
+                            Score = Score_BankShot;
+                        }
+                        else if (TouchedWalls >= 3)
+                        {
+                            Score = Score_3Cushion;
+                        }
+                        else
+                        {
+                            Score = Score_Success;
+                        }
+
+                        break;
+                    }
+                }
+
+                // 쿠션 판단
+                if (TouchedObject.CompareTag("Wall"))
+                {
+                    TouchedWalls++;
                 }
             }
+
+            // 실패에 대한 턴 증감 계산
+            if (Score == Score_Miss && TouchedBalls > 0)
+            {
+                Score = Score_Save;
+            }
+
+            // 잔여 턴 계산
+            Turn = Mathf.Min( Turn + Score, MaxTurn );
+
+            Debug.Log("Result ----");
+            Debug.Log("Score : " + Score);
+            Debug.Log("Touched Balls : " + TouchedBalls);
+            Debug.Log("Touched Walls : " + TouchedWalls);
+            Debug.Log("Bank Shot : " + bBankShot );
+            Debug.Log("Remain Turn : " + Turn);
         }
+
+        if (Turn > 0.0f)
+            SetTurnState(ETurn.Action);
     }
 
     private void ResetEffects()
@@ -170,6 +314,7 @@ public class GameController : MonoBehaviour
         TouchPoint_Begin.SetActive(false);
         TouchPoint_End.SetActive(false);
 
+        // 샷 시작
         StartShot();
     }
 
@@ -198,45 +343,31 @@ public class GameController : MonoBehaviour
 
         Vector2 Power = (StartPosition - EndPosition).normalized * PowerScalar;
 
-        if (CueBallRB == null)
+        Rigidbody2D RB = CueBall.GetComponent<Rigidbody2D>();
+        if (RB == null)
             return;
 
-        // 플레이어 턴 종료
-        Turn = ETurn.Wait;
-        
-        CueBallRB.AddForce(Power);
+        RB.AddForce(Power);
+
+        // 턴 변경
+        SetTurnState(ETurn.Wait);
     }
 
-    // 미세하게 움직이는 공은 세운다.
+    // 공이 움직이는지 여부 확인
     bool CheckBallStop()
     {
-        if (CueBallRB.velocity != Vector2.zero)
-            return false;
-
-        for (int i = 0; i < ObjectBalls.Count; ++i)
+        // 모든 공에 알림
+        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
+        foreach (GameObject Ball in Balls)
         {
-            Rigidbody2D RB = ObjectBalls[i].GetComponent<Rigidbody2D>();
-            if (RB != null && RB.velocity != Vector2.zero)
+            if (Ball == null)
+                continue;
+
+            Rigidbody2D RB = Ball.GetComponent<Rigidbody2D>();
+            if (RB == null || RB.velocity != Vector2.zero)
                 return false;
         }
 
         return true;
-    }
-
-    void StartTurn()
-    {
-        Turn = ETurn.Action;
-    }
-
-    void EndTurn()
-    {
-        // 스코어 체크
-
-        // 게임 종료 체크
-
-        ResetEffects();
-
-        // 다음 턴 시작
-        StartTurn();
-    }
+    }     
 }
