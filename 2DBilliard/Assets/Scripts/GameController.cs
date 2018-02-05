@@ -20,7 +20,7 @@ public class GameController : MonoBehaviour
     // 적구
     public List<GameObject> ObjectBalls;
     // 가이드라인, 터치 이펙트,
-    public GameObject GuideLine, TouchPoint_Begin, TouchPoint_End;
+    public GameObject GuideLine;
     // 기본 턴 수, 최대 턴 수
     public float DefaultTurn, MaxTurn;
     // 타격 점수
@@ -226,10 +226,6 @@ public class GameController : MonoBehaviour
     {
         // 일단 가이드라인은 숨김
         GuideLine.SetActive(false);
-
-        // 터치 포인트도 숨김
-        TouchPoint_Begin.SetActive(false);
-        TouchPoint_End.SetActive(false);
     }
 
     bool CheckTouch()
@@ -284,22 +280,22 @@ public class GameController : MonoBehaviour
 
     void OnTouchStart( Vector2 TouchedPosition )
     {
-        StartPosition = TouchedPosition;
-
-        TouchPoint_Begin.transform.position = (Vector3)TouchedPosition;
-        TouchPoint_Begin.SetActive(true);
-
-        TouchPoint_End.transform.position = (Vector3)TouchedPosition;
-        TouchPoint_End.SetActive(true);
-
+        PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
+        if (PC != null)
+        {
+            PC.OnTouchStart(TouchedPosition);
+        }
+        
         GuideLine.SetActive(true);
     }
 
     void OnTouchMove(Vector2 TouchedPosition)
     {
-        EndPosition = TouchedPosition;
-
-        TouchPoint_End.transform.position = (Vector3)TouchedPosition;
+        PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
+        if (PC != null)
+        {
+            PC.OnTouchMove(TouchedPosition);
+        }
 
         UpdateGuildLine();
     }
@@ -309,10 +305,12 @@ public class GameController : MonoBehaviour
         EndPosition = TouchedPosition;
 
         GuideLine.SetActive(false);
-        
-        // 터치 포인트도 숨김
-        TouchPoint_Begin.SetActive(false);
-        TouchPoint_End.SetActive(false);
+
+        PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
+        if (PC != null)
+        {
+            PC.OnTouchEnd(TouchedPosition);
+        }
 
         // 샷 시작
         StartShot();
