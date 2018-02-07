@@ -19,8 +19,6 @@ public class GameController : MonoBehaviour
     public GameObject CueBall;
     // 적구
     public List<GameObject> ObjectBalls;
-    // 가이드라인, 터치 이펙트,
-    public GameObject GuideLine;
     // 기본 턴 수, 최대 턴 수
     public float DefaultTurn, MaxTurn;
     // 타격 점수
@@ -84,6 +82,7 @@ public class GameController : MonoBehaviour
                 continue;
 
             RB.velocity = Vector2.zero;
+            RB.rotation = 0.0f;
         }
     }
 
@@ -130,9 +129,6 @@ public class GameController : MonoBehaviour
     // 플레이어 액션 시작
     void StartPlayerAction()
     {
-        // 연출 초기화
-        ResetEffects();
-
         // to do. 액션 가능 연출
 
     }
@@ -222,12 +218,6 @@ public class GameController : MonoBehaviour
             SetTurnState(ETurn.Action);
     }
 
-    private void ResetEffects()
-    {
-        // 일단 가이드라인은 숨김
-        GuideLine.SetActive(false);
-    }
-
     bool CheckTouch()
     {
         if (Input.touchCount < 1)
@@ -280,31 +270,29 @@ public class GameController : MonoBehaviour
 
     void OnTouchStart( Vector2 TouchedPosition )
     {
+        StartPosition = TouchedPosition;
+
         PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
         if (PC != null)
         {
             PC.OnTouchStart(TouchedPosition);
         }
-        
-        GuideLine.SetActive(true);
     }
 
     void OnTouchMove(Vector2 TouchedPosition)
     {
+        EndPosition = TouchedPosition;
+
         PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
         if (PC != null)
         {
             PC.OnTouchMove(TouchedPosition);
         }
-
-        UpdateGuildLine();
     }
 
     void OnTouchEnd(Vector2 TouchedPosition)
     {
         EndPosition = TouchedPosition;
-
-        GuideLine.SetActive(false);
 
         PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
         if (PC != null)
@@ -314,24 +302,6 @@ public class GameController : MonoBehaviour
 
         // 샷 시작
         StartShot();
-    }
-
-    void UpdateGuildLine()
-    {
-        if (GuideLine == null)
-            return;
-        
-        float Power = Mathf.Min(Vector2.Distance(StartPosition, EndPosition) * DistanceToPower, MaxPower) / DistanceToPower;
-        float Angle = Vector2.SignedAngle(Vector2.up, StartPosition - EndPosition);
-
-        Transform t = GuideLine.GetComponent<Transform>();
-        if (t == null)
-            return;
-
-        Vector3 NewScale = new Vector3(1, Power, 1);
-
-        t.localScale = NewScale;
-        t.rotation = Quaternion.Euler(0.0f, 0.0f, Angle);
     }
 
     // 샷 가즈아!
