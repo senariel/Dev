@@ -89,6 +89,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 324e15e13c365c44eb544fa23c0e9815, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TouchEffect_Begin: {fileID: 0}
+  TouchEffect_End: {fileID: 0}
+  GuideLine: {fileID: 0}
+  SegmentCount: 100
+  SegmentScale: 1
+  SightLine: {fileID: 0}
 --- !u!212 &212265649804054988
 SpriteRenderer:
   m_ObjectHideFlags: 1

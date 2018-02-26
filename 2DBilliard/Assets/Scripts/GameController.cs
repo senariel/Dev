@@ -15,16 +15,14 @@ public class GameController : MonoBehaviour
         Wait,
         Calc
     }
-    // 수구
-    public GameObject CueBall;
-    // 적구
-    public List<GameObject> ObjectBalls;
     // 기본 턴 수, 최대 턴 수
     public float DefaultTurn, MaxTurn;
     // 타격 점수
     public float Score_Miss, Score_Save, Score_Success, Score_3Cushion, Score_BankShot;
     // 힘 계산용 값
     public float DistanceToPower, MaxPower;
+    // 시뮬레이션 횟수
+    public float SimulateCount;
 
     // 플레이어에게 남은 턴 수
     protected float Turn = 0.0f;
@@ -32,19 +30,30 @@ public class GameController : MonoBehaviour
     private ETurn TurnState = ETurn.None;
     // 수구의 타격 계산용
     private Vector2 StartPosition, EndPosition;
+    // 모든 공 캐싱
+    // 수구
+    protected GameObject CueBall;
+    // 적구
+    protected List<GameObject> ObjectBalls = new List<GameObject>();
+    protected List<GameObject> Balls = new List<GameObject>();
+    protected List<GameObject> SavedTransforms = new List<GameObject>();
+    protected List<Vector2> Segments = new List<Vector2>();
 
-	// Use this for initialization
-	void Start ()
-    {        
+    // Use this for initialization
+    void Start ()
+    {
+        // 모든 공 캐싱
+        InitializeBalls();
+
         // 턴 수 충전
         Turn = DefaultTurn;
 
         // 턴 시작
         SetTurnState(ETurn.Action);
     }
-	
-	// Update is called once per frame
-	void Update ()
+
+    // Update is called once per frame
+    void Update()
     {
         // 턴 확인
         if (TurnState == ETurn.Action)
@@ -65,13 +74,37 @@ public class GameController : MonoBehaviour
         }
     }
 
+    // 공 초기화
+    void InitializeBalls()
+    {
+        Balls.Clear();
+
+        GameObject[] BallList = GameObject.FindGameObjectsWithTag("Ball");
+        foreach (GameObject Ball in BallList)
+        {
+            if (Ball == null)
+                continue;
+
+            Balls.Add(Ball);
+            SavedTransforms.Add(null);
+
+            if (Ball.GetComponent<PlayerBallController>() != null)
+            {
+                CueBall = Ball;
+            }
+            else
+            {
+                ObjectBalls.Add(Ball);
+            }
+        }
+    }
+
     // 비상 정지 : 디버깅용
     void EmergencyStop()
     {
         Debug.Log("Stop!");
 
         // 모든 공에 알림
-        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
         foreach (GameObject Ball in Balls)
         {
             if (Ball == null)
@@ -112,7 +145,6 @@ public class GameController : MonoBehaviour
         }
 
         // 모든 공에 알림
-        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
         foreach (GameObject Ball in Balls)
         {
             if (Ball == null)
@@ -281,6 +313,9 @@ public class GameController : MonoBehaviour
 
     void OnTouchMove(Vector2 TouchedPosition)
     {
+        if (EndPosition == TouchedPosition)
+            return;
+
         EndPosition = TouchedPosition;
 
         PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
@@ -288,6 +323,8 @@ public class GameController : MonoBehaviour
         {
             PC.OnTouchMove(TouchedPosition);
         }
+
+        SimulateTrajectory();
     }
 
     void OnTouchEnd(Vector2 TouchedPosition)
@@ -307,25 +344,27 @@ public class GameController : MonoBehaviour
     // 샷 가즈아!
     void StartShot()
     {
-        float PowerScalar = Mathf.Min(Vector2.Distance(StartPosition, EndPosition) * DistanceToPower, MaxPower);
-
-        Vector2 Power = (StartPosition - EndPosition).normalized * PowerScalar;
-
         Rigidbody2D RB = CueBall.GetComponent<Rigidbody2D>();
         if (RB == null)
             return;
 
-        RB.AddForce(Power);
+        RB.AddForce(GetShotForce());
 
         // 턴 변경
         SetTurnState(ETurn.Wait);
+    }
+
+    Vector2 GetShotForce()
+    {
+        float ShotPower = Mathf.Min(Vector2.Distance(StartPosition, EndPosition) * DistanceToPower, MaxPower);
+
+        return (StartPosition - EndPosition).normalized * ShotPower;
     }
 
     // 공이 움직이는지 여부 확인
     bool CheckBallStop()
     {
         // 모든 공에 알림
-        GameObject[] Balls = GameObject.FindGameObjectsWithTag("Ball");
         foreach (GameObject Ball in Balls)
         {
             if (Ball == null)
@@ -337,5 +376,71 @@ public class GameController : MonoBehaviour
         }
 
         return true;
-    }     
+    }
+
+    // 타격 시뮬레이션
+    public void SimulateTrajectory()
+    {
+        if (Balls.Count != SavedTransforms.Count)
+            return;
+
+        Rigidbody2D RB = CueBall.GetComponent<Rigidbody2D>();
+        if (RB == null)
+            return;
+
+        PlayerBallController PC = CueBall.GetComponent<PlayerBallController>();
+        if (PC == null)
+            return;
+
+        Physics2D.autoSimulation = false;
+
+        // 모든 공의 위치/각도를 저장한다.
+        for (int i = 0; i < Balls.Count; ++i)
+        {
+            if (SavedTransforms[i] == null)
+            {
+                SavedTransforms[i] = new GameObject();
+            }
+
+            SavedTransforms[i].transform.position = Balls[i].transform.position;
+            SavedTransforms[i].transform.rotation = Balls[i].transform.rotation;
+            SavedTransforms[i].transform.localScale = Balls[i].transform.localScale;
+        }
+
+        Segments.Clear();
+
+        // 시뮬레이션 시작
+        Vector2 Force = GetShotForce();
+        RB.AddForce(Force);
+
+        for (int i = 0; i < SimulateCount; ++i)
+        {
+            Segments.Add(RB.transform.position);
+            Physics2D.Simulate(Time.fixedDeltaTime);
+        }
+
+        // 재워!
+        RB.Sleep();
+
+        // 시뮬레이션 종료
+        Physics2D.autoSimulation = true;
+
+        // 모든 공의 위치/각도를 복구한다.
+        for (int i = 0; i < Balls.Count; ++i)
+        {
+            Balls[i].transform.position = SavedTransforms[i].transform.position;
+            Balls[i].transform.rotation = SavedTransforms[i].transform.rotation;
+            Balls[i].transform.localScale = SavedTransforms[i].transform.localScale;
+
+            Rigidbody2D RBB = Balls[i].GetComponent<Rigidbody2D>();
+            if (RBB == null)
+                continue;
+
+            RBB.velocity = Vector2.zero;
+            RBB.angularVelocity = 0.00f;
+            RBB.inertia = 0.00f;
+        }
+
+        PC.SimulatePath(Segments);
+    }
 }
