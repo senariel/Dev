@@ -3,7 +3,10 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - AREA_START
+  - AREA_PLAY
+  - AREA_FINISH
   layers:
   - Default
   - TransparentFX
