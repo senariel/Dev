@@ -4,9 +4,7 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - AREA_START
-  - AREA_PLAY
-  - AREA_FINISH
+  - Start
   layers:
   - Default
   - TransparentFX
