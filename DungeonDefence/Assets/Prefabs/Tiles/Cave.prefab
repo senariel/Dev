@@ -10,12 +10,13 @@ GameObject:
   m_Component:
   - component: {fileID: 6558169227288850374}
   - component: {fileID: 1434578936405044389}
+  - component: {fileID: 7190146118141769325}
   m_Layer: 0
-  m_Name: Block
+  m_Name: Cave
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &6558169227288850374
 Transform:
@@ -44,8 +45,20 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  m_Size: {x: 1, y: 0.8, z: 1}
+  m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!114 &7190146118141769325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6845316717116352032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7856bd4a14a7d54791d2ecdf3614ea8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &849677441685792236
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -56,6 +69,10 @@ PrefabInstance:
     - target: {fileID: 147966, guid: 636b981d176800648986754d995086e7, type: 3}
       propertyPath: m_Name
       value: Cave01_4
+      objectReference: {fileID: 0}
+    - target: {fileID: 147966, guid: 636b981d176800648986754d995086e7, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     - target: {fileID: 424714, guid: 636b981d176800648986754d995086e7, type: 3}
       propertyPath: m_RootOrder
