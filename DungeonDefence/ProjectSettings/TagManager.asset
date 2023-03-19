@@ -4,7 +4,11 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Start
+  - Tile_Cave
+  - Tile_Fort
+  - Tile_Ice
+  - Tile_Start
+  - Tile_Finish
   layers:
   - Default
   - TransparentFX
