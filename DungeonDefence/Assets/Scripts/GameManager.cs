@@ -18,13 +18,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] protected Vector3 SpawnDirection;
 
 
-    protected TileManager _tileManager;
-    private List<GameObject> _enemyList = new();
+    protected TileManager tileManager;
+    private List<GameObject> enemyList = new();
 
     // Start is called before the first frame update
     void Awake()
     {
-        _tileManager = floor?.GetComponent<TileManager>();
+        tileManager = floor?.GetComponent<TileManager>();
 
         Debug.Log("[GameManager : Awake]");
     }
@@ -56,7 +56,7 @@ public class GameManager : MonoBehaviour
     public bool IsGameStartable()
     {
         // 타일관리자 유효성 확인
-        if (_tileManager == null || _tileManager.IsGameStartable() == false)
+        if (tileManager == null || tileManager.IsGameStartable() == false)
             return false;
 
         return true;
@@ -80,7 +80,7 @@ public class GameManager : MonoBehaviour
     // 웨이브 생성하기. 코루틴 반복용
     IEnumerator SpawnWave(WaveSpawnData waveData)
     {
-        Transform startTransform = _tileManager.GetStartTransform();
+        Transform startTransform = tileManager.GetStartTransform();
 
         foreach (GameObject unitPrefab in waveData.unitPrefabList)
         {
@@ -96,7 +96,7 @@ public class GameManager : MonoBehaviour
 
                 if (unit != null)
                 {
-                    _enemyList.Add(unit);
+                    enemyList.Add(unit);
                 }
             }
 

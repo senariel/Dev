@@ -12,21 +12,24 @@ public class TileManager : MonoBehaviour
     // 최하단 타일(파괴 불가, 걷기용)
     public GameObject floorTilePrefab = null;
 
-    private GameObject floorTileContainer = null;
-    private GameObject[] floorTiles = new GameObject[0];
-    private GameObject tileContainer = null;
-    private GameObject[] tiles = new GameObject[0];
-    private GameObject _startTile = null;
-    private GameObject _finishTile = null;
+    [SerializeField, HideInInspector] protected GameObject floorTileContainer = null;
+    [SerializeField, HideInInspector] protected GameObject[] floorTiles = new GameObject[0];
+    [SerializeField, HideInInspector] protected GameObject tileContainer = null;
+    [SerializeField, HideInInspector] protected GameObject[] tiles = new GameObject[0];
+    [SerializeField, HideInInspector] protected GameObject startTile = null;
+    [SerializeField, HideInInspector] protected GameObject finishTile = null;
+    private bool isReady = false;
 
-    void AWake()
+    void Awake()
     {
-        Debug.Log("[TileManager : AWake]");
-
-        UpdateFloorTiles();
+        if (GenerateFloorTiles() == false)
+            return;
 
         // 최초 타일 생성/배치
-        UpdateTiles();
+        if (GenerateTiles() == false)
+            return;
+
+        isReady = true;
     }
 
     // Start is called before the first frame update
@@ -41,17 +44,38 @@ public class TileManager : MonoBehaviour
 
     }
 
+    // 타일이 정상 설치되었는지 확인
     public bool IsGameStartable()
     {
-        return false;
+        return isReady;
     }
 
+    // 시작 위치 반환
     public Transform GetStartTransform()
     {
-        return _startTile?.transform;
+        return startTile?.transform;
     }
 
-    public bool UpdateFloorTiles()
+    public void ResetFloorTiles()
+    {
+        if (floorTileContainer)
+        {
+            DestroyImmediate(floorTileContainer);
+            floorTileContainer = null;
+        }
+    }
+
+    public void ResetTiles()
+    {
+        if (tileContainer)
+        {
+            DestroyImmediate(tileContainer);
+            tileContainer = null;
+        }
+    }
+
+    // 바닥 타일 갱신
+    public bool GenerateFloorTiles()
     {
         if (floorTilePrefab == null)
             return false;
@@ -63,6 +87,7 @@ public class TileManager : MonoBehaviour
             Transform tf = transform.Find("Bottom");
             if (tf != null)
             {
+                Debug.Log("[TileManager : UpdateFloorTiles] container is null but i found : " + floorTilePrefab);
                 floorTileContainer = tf.gameObject;
             }
             else
@@ -76,9 +101,12 @@ public class TileManager : MonoBehaviour
             // 연결
             floorTileContainer.transform.SetParent(transform);
         }
+        floorTileContainer.transform.position = new Vector3(0.0f, tileSize.y / -2.0f, 0.0f);
 
         // 타일 전체 갯수
         int tileTotal = tileCount.x * tileCount.y;
+
+        Debug.Log("[TileManager : UpdateFloorTiles] " + floorTiles.Length);
 
         // 초과 타일 제거
         if (floorTiles.Length > tileTotal)
@@ -107,7 +135,7 @@ public class TileManager : MonoBehaviour
         // 기본 위치 계산. pivot 이 바닥 가운데이므로 타일의 반만큼 더 이동해야 한다.
         Vector3 basePosition = new(
             tileCount.x * tileSize.x * 0.5f - (tileSize.x * 0.5f),
-            (tileCollider.size.y * baseScale.y) * -1.00f,
+            0.0f,
             tileCount.y * tileSize.z * 0.5f - (tileSize.z * 0.5f));
 
         int index = -1;
@@ -130,7 +158,7 @@ public class TileManager : MonoBehaviour
                         basePosition.y,
                         (-v * tileSize.z) + basePosition.z);
 
-                    tile.transform.SetLocalPositionAndRotation(spawnPosition, Quaternion.identity);
+                    tile.transform.SetLocalPositionAndRotation(spawnPosition, floorTilePrefab.transform.rotation);
                     tile.transform.localScale = baseScale;
 
                     // 바닥 타일은 정적으로 고정
@@ -148,7 +176,8 @@ public class TileManager : MonoBehaviour
         return true;
     }
 
-    public bool UpdateTiles()
+    // 타일 갱신
+    public bool GenerateTiles()
     {
         // 컨테이너 생성
         if (tileContainer == null)
@@ -170,6 +199,7 @@ public class TileManager : MonoBehaviour
             // 연결
             tileContainer.transform.SetParent(transform);
         }
+        tileContainer.transform.localPosition = new Vector3(0.0f, tileSize.y / 2.0f, 0.0f);
 
         // 타일 전체 갯수
         int tileTotal = tileCount.x * tileCount.y;
@@ -214,7 +244,7 @@ public class TileManager : MonoBehaviour
                     // 기본 위치 계산. pivot 이 바닥 가운데이므로 타일의 반만큼 더 이동해야 한다.
                     Vector3 basePosition = new(
                         tileCount.x * tileSize.x * 0.5f - (tileSize.x * 0.5f),
-                        (tileCollider.size.y * baseScale.y) * -1.00f,
+                        0.0f,
                         tileCount.y * tileSize.z * 0.5f - (tileSize.z * 0.5f));
 
                     // 타일 생성
@@ -223,8 +253,10 @@ public class TileManager : MonoBehaviour
                     if (tiles[index])
                     {
                         // 다른 타일이라면 기존 타일 제거
-                        if (Object.ReferenceEquals(tilePrefab, tiles[index]) == false)
+                        if (tilePrefab.CompareTag(tiles[index].tag) == false)
                         {
+                            Debug.Log("\t\tDiff Tag");
+
                             DestroyImmediate(tiles[index]);
                             tiles[index] = null;
                         }
@@ -254,16 +286,27 @@ public class TileManager : MonoBehaviour
                         basePosition.y,
                         (-v * tileSize.z) + basePosition.z);
 
-                    tile.transform.SetLocalPositionAndRotation(spawnPosition, Quaternion.identity);
+                    tile.transform.SetLocalPositionAndRotation(spawnPosition, tilePrefab.transform.rotation);
                     tile.transform.localScale = baseScale;
 
                     // 타일은 정적으로 고정
                     tile.isStatic = true;
 
+                    // 시작 위치 갱신
+                    if (tile.CompareTag("Tile_Start"))
+                    {
+                        startTile = tile;
+                    }
+                    else if (tile.CompareTag("Tile_Finish"))
+                    {
+                        finishTile = tile;
+                    }
+
                     tiles[index] = tile;
                 }
                 else
                 {
+                    // 빈 타일인데 기존 타일이 있다면 제거
                     if (tiles[index])
                     {
                         DestroyImmediate(tiles[index]);
@@ -273,7 +316,7 @@ public class TileManager : MonoBehaviour
             }
         }
 
-        return true;
+        return (startTile && finishTile);
     }
 }
 
@@ -281,7 +324,8 @@ public class TileManager : MonoBehaviour
 public class TileManagerEditor : Editor
 {
     private TileManager script = null;
-    bool isFoldOut = false;
+    private bool isFoldOut = false;
+    private GameObject[] tileMap = new GameObject[0];
 
     void OnEnable()
     {
@@ -298,18 +342,14 @@ public class TileManagerEditor : Editor
         script.tileCount = EditorGUILayout.Vector2IntField("TileMap Size", script.tileCount);
         script.tileSize = EditorGUILayout.Vector3Field("Tile Size", script.tileSize);
 
-        // 바닥 타일 갱신
-        script.UpdateFloorTiles();
-
-        // 타일 갱신
-        script.UpdateTiles();
-
         isFoldOut = EditorGUILayout.Foldout(isFoldOut, "Tile Settings");
         if (isFoldOut)
         {
             GUILayout.BeginVertical(new GUIStyle(GUI.skin.window));
 
             // EditorGUI.indentLevel++;
+
+            System.Array.Resize(ref script.tilePrefabs, script.tileCount.x * script.tileCount.y);
 
             int TileIndex = 0;
             for (int i = 0; i < script.tileCount.x; ++i)
@@ -329,5 +369,26 @@ public class TileManagerEditor : Editor
 
             GUILayout.EndVertical();
         }
+
+        // 초기화/생성 버튼 추가
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Reset Tiles"))
+        {
+            script.ResetTiles();
+        }
+        if (GUILayout.Button("Reset All Tiles"))
+        {
+            script.ResetFloorTiles();
+            script.ResetTiles();
+        }
+        if (GUILayout.Button("Generate Tiles"))
+        {
+            // 바닥 타일 갱신
+            script.GenerateFloorTiles();
+
+            // 타일 갱신
+            script.GenerateTiles();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 }
