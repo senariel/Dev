@@ -85,23 +85,20 @@ public class GameManager : MonoBehaviour
     // 웨이브 생성하기. 코루틴 반복용
     IEnumerator SpawnWave(WaveSpawnData waveData)
     {
-        Transform startTransform = tileManager.GetStartTransform();
+        Tile startTile = tileManager.GetStartTile();
 
         foreach (GameObject unitPrefab in waveData.unitPrefabList)
         {
-            Debug.Log("\tInstantiate [" + unitPrefab + "] " + unitPrefab.transform.forward + " / " + startTransform.forward + " / " + Vector3.forward);
-
             if (unitPrefab != null)
             {
-                // 유닛 높이 판단
-                CapsuleCollider unitCollider = unitPrefab.GetComponent<CapsuleCollider>();
-                Vector3 positionAdd = new Vector3(0.0f, unitCollider? (unitCollider.height / 2) : 0.0f, 0.0f);
+                // 유닛 생성
+                Vector3 spawnPosition = startTile.transform.position;
+                spawnPosition.y -= tileManager.tileSize.y * 0.5f;
 
-                // Start Rotation 은 어떻게 가져올까
                 GameObject unit = GameObject.Instantiate<GameObject>(
                     unitPrefab,
-                    startTransform.position + positionAdd,
-                    startTransform.rotation);
+                    spawnPosition,
+                    startTile.transform.rotation);
 
                 if (unit != null)
                 {
@@ -112,10 +109,13 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(waveData.delay);
         }
 
-        Debug.Log("[GameManager : SpawnWave] End");
         yield break;
     }
 
-    
+    // 유닛이 목적지에 도착함
+    public void UnitReachedFinish(Unit enemy)
+    {
+        Destroy(enemy.gameObject);
+    }
 }
 

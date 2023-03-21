@@ -16,8 +16,8 @@ public class TileManager : MonoBehaviour
     [SerializeField, HideInInspector] protected GameObject[] floorTiles = new GameObject[0];
     [SerializeField, HideInInspector] protected GameObject tileContainer = null;
     [SerializeField, HideInInspector] protected GameObject[] tiles = new GameObject[0];
-    [SerializeField, HideInInspector] protected GameObject startTile = null;
-    [SerializeField, HideInInspector] protected GameObject finishTile = null;
+    [SerializeField, HideInInspector] protected Tile startTile = null;
+    [SerializeField, HideInInspector] protected Tile finishTile = null;
     private bool isReady = false;
 
     void Awake()
@@ -50,10 +50,16 @@ public class TileManager : MonoBehaviour
         return isReady;
     }
 
-    // 시작 위치 반환
-    public Transform GetStartTransform()
+    // 시작 타일 반환
+    public Tile GetStartTile()
     {
-        return startTile?.transform;
+        return startTile;
+    }
+
+    // 최종 목표 타일 반환
+    public Tile GetFinishTile()
+    {
+        return finishTile;
     }
 
     public void ResetFloorTiles()
@@ -296,11 +302,11 @@ public class TileManager : MonoBehaviour
                     // 시작 위치 갱신
                     if (tile.CompareTag("Tile_Start"))
                     {
-                        startTile = tile;
+                        startTile = tile.GetComponent<Tile>();
                     }
                     else if (tile.CompareTag("Tile_Finish"))
                     {
-                        finishTile = tile;
+                        finishTile = tile.GetComponent<Tile>();
                     }
                     else
                     {
