@@ -249,6 +249,7 @@ public class TileManager : MonoBehaviour
 
                     // 타일 생성
                     GameObject tile = null;
+
                     // 기존 타일 확인
                     if (tiles[index])
                     {
@@ -301,6 +302,15 @@ public class TileManager : MonoBehaviour
                     {
                         finishTile = tile;
                     }
+                    else
+                    {
+                        Tile tileScript = tile.GetComponent<Tile>();
+                        if (tileScript)
+                        {
+                            // 일반 타일은 파괴 가능
+                            tileScript.breakable = true;
+                        }
+                    }
 
                     tiles[index] = tile;
                 }
@@ -317,6 +327,38 @@ public class TileManager : MonoBehaviour
         }
 
         return (startTile && finishTile);
+    }
+
+    public void BreakTile(Tile tile)
+    {
+        if (tile)
+        {
+            StartCoroutine(PlayBreakTile(tile));
+            Destroy(tile.gameObject);
+        }
+    }
+
+    private IEnumerator PlayBreakTile(Tile tile)
+    {
+        if (tile && tile.breakFX)
+        {
+            GameObject FXObj = Instantiate(tile.breakFX, tile.transform.position, tile.breakFX.transform.rotation);
+            if (FXObj)
+            {
+                ParticleSystem fx = FXObj.GetComponent<ParticleSystem>();
+                if (fx)
+                {
+                    fx.Play(true);
+
+                    yield return new WaitForSeconds(fx.main.duration);
+
+                    fx.Stop();
+                    Destroy(FXObj);
+                }
+            }
+        }
+
+        yield break;
     }
 }
 
