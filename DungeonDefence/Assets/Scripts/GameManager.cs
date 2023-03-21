@@ -93,10 +93,14 @@ public class GameManager : MonoBehaviour
 
             if (unitPrefab != null)
             {
+                // 유닛 높이 판단
+                CapsuleCollider unitCollider = unitPrefab.GetComponent<CapsuleCollider>();
+                Vector3 positionAdd = new Vector3(0.0f, unitCollider? (unitCollider.height / 2) : 0.0f, 0.0f);
+
                 // Start Rotation 은 어떻게 가져올까
                 GameObject unit = GameObject.Instantiate<GameObject>(
                     unitPrefab,
-                    startTransform.position,
+                    startTransform.position + positionAdd,
                     startTransform.rotation);
 
                 if (unit != null)
