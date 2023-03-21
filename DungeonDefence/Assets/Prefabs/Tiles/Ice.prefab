@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5140423827794898216}
   - component: {fileID: 1309434866513877016}
-  - component: {fileID: -1463321181030338074}
   - component: {fileID: -3738644403592807050}
   m_Layer: 0
   m_Name: Ice
@@ -48,18 +47,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 0.8, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-1463321181030338074
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7634956393338797748}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7856bd4a14a7d54791d2ecdf3614ea8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &-3738644403592807050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,6 +59,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7856bd4a14a7d54791d2ecdf3614ea8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  breakable: 0
+  breakFX: {fileID: 1000011128802252, guid: 96730f8640590934eacb6f860058e7f9, type: 3}
 --- !u!1001 &4113294793827412335
 PrefabInstance:
   m_ObjectHideFlags: 0
