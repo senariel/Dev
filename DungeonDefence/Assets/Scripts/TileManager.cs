@@ -329,6 +329,7 @@ public class TileManager : MonoBehaviour
         return (startTile && finishTile);
     }
 
+    // 타일 파괴하기
     public void BreakTile(Tile tile)
     {
         if (tile)
@@ -338,6 +339,7 @@ public class TileManager : MonoBehaviour
         }
     }
 
+    // 타일 파괴 연출
     private IEnumerator PlayBreakTile(Tile tile)
     {
         if (tile && tile.breakFX)
