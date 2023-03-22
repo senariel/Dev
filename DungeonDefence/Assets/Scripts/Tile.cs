@@ -11,6 +11,10 @@ public class Tile : MonoBehaviour
     private TileManager tileManager;
     private ParticleSystem fx;
 
+    // 배치된 타일의 인덱스. Bottom 과 Upper 의 인덱스가 중복되는 것에 주의.
+    public int tileIndex {get; set;}
+
+
     void Awake()
     {
         

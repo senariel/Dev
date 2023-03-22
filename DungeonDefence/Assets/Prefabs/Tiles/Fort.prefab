@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 536089345271189475}
   - component: {fileID: 6897348842022471253}
   - component: {fileID: 2737599891701592853}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Fort
   m_TagString: Tile_Fort
   m_Icon: {fileID: 0}

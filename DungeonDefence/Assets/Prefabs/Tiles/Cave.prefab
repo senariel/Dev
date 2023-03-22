@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3988491693453810463}
   - component: {fileID: 675817988980667899}
   - component: {fileID: 7567456378060547478}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cave
   m_TagString: Tile_Cave
   m_Icon: {fileID: 0}

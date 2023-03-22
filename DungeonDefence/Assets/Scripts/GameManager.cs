@@ -92,8 +92,8 @@ public class GameManager : MonoBehaviour
             if (unitPrefab != null)
             {
                 // 유닛 생성
-                Vector3 spawnPosition = startTile.transform.position;
-                spawnPosition.y -= tileManager.tileSize.y * 0.5f;
+                Vector3 spawnPosition = tileManager.GetTilePosition(startTile.tileIndex, true);
+                spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
 
                 GameObject unit = GameObject.Instantiate<GameObject>(
                     unitPrefab,

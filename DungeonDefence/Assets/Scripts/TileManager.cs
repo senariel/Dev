@@ -106,6 +106,7 @@ public class TileManager : MonoBehaviour
 
             // 연결
             floorTileContainer.transform.SetParent(transform);
+            floorTileContainer.layer = LayerMask.NameToLayer("Tile_Block");
         }
         floorTileContainer.transform.position = new Vector3(0.0f, tileSize.y / -2.0f, 0.0f);
 
@@ -138,12 +139,6 @@ public class TileManager : MonoBehaviour
                             tileSize.y / (tileCollider.size.y / floorTilePrefab.transform.localScale.y),
                             tileSize.z / (tileCollider.size.z / floorTilePrefab.transform.localScale.z)) : Vector3.one;
 
-        // 기본 위치 계산. pivot 이 바닥 가운데이므로 타일의 반만큼 더 이동해야 한다.
-        Vector3 basePosition = new(
-            tileCount.x * tileSize.x * 0.5f - (tileSize.x * 0.5f),
-            0.0f,
-            tileCount.y * tileSize.z * 0.5f - (tileSize.z * 0.5f));
-
         int index = -1;
         for (int v = 0; v < tileCount.x; ++v)
         {
@@ -157,14 +152,7 @@ public class TileManager : MonoBehaviour
                 if (tile != null)
                 {
                     tile.name = "BottomTile_" + index;
-
-                    // 배치위치 계산
-                    Vector3 spawnPosition = new(
-                        (h * tileSize.x) - basePosition.x,
-                        basePosition.y,
-                        (-v * tileSize.z) + basePosition.z);
-
-                    tile.transform.SetLocalPositionAndRotation(spawnPosition, floorTilePrefab.transform.rotation);
+                    tile.transform.SetLocalPositionAndRotation(GetTilePosition(index), floorTilePrefab.transform.rotation);
                     tile.transform.localScale = baseScale;
 
                     // 바닥 타일은 정적으로 고정
@@ -204,6 +192,7 @@ public class TileManager : MonoBehaviour
 
             // 연결
             tileContainer.transform.SetParent(transform);
+            tileContainer.layer = LayerMask.NameToLayer("Tile_Block");
         }
         tileContainer.transform.localPosition = new Vector3(0.0f, tileSize.y / 2.0f, 0.0f);
 
@@ -247,12 +236,6 @@ public class TileManager : MonoBehaviour
                                         tileSize.y / (tileCollider.size.y / tilePrefab.transform.localScale.y),
                                         tileSize.z / (tileCollider.size.z / tilePrefab.transform.localScale.z)) : Vector3.one;
 
-                    // 기본 위치 계산. pivot 이 바닥 가운데이므로 타일의 반만큼 더 이동해야 한다.
-                    Vector3 basePosition = new(
-                        tileCount.x * tileSize.x * 0.5f - (tileSize.x * 0.5f),
-                        0.0f,
-                        tileCount.y * tileSize.z * 0.5f - (tileSize.z * 0.5f));
-
                     // 타일 생성
                     GameObject tile = null;
 
@@ -285,19 +268,19 @@ public class TileManager : MonoBehaviour
                         return false;
                     }
 
+                    Tile tileScript = tile.GetComponent<Tile>();
+                    if (!tileScript)
+                    {
+                        return false;
+                    }
+
+                    // 인덱스 설정
                     tile.name = "Tile_" + index;
-
-                    // 배치위치 계산
-                    Vector3 spawnPosition = new(
-                        (h * tileSize.x) - basePosition.x,
-                        basePosition.y,
-                        (-v * tileSize.z) + basePosition.z);
-
-                    tile.transform.SetLocalPositionAndRotation(spawnPosition, tilePrefab.transform.rotation);
+                    tile.transform.SetLocalPositionAndRotation(GetTilePosition(index), tilePrefab.transform.rotation);
                     tile.transform.localScale = baseScale;
+                    tile.isStatic = true;   // 타일은 정적으로 고정
+                    tileScript.tileIndex = index;
 
-                    // 타일은 정적으로 고정
-                    tile.isStatic = true;
 
                     // 시작 위치 갱신
                     if (tile.CompareTag("Tile_Start"))
@@ -310,12 +293,8 @@ public class TileManager : MonoBehaviour
                     }
                     else
                     {
-                        Tile tileScript = tile.GetComponent<Tile>();
-                        if (tileScript)
-                        {
-                            // 일반 타일은 파괴 가능
-                            tileScript.breakable = true;
-                        }
+                        // 일반 타일은 파괴 가능
+                        tileScript.breakable = true;
                     }
 
                     tiles[index] = tile;
@@ -368,6 +347,70 @@ public class TileManager : MonoBehaviour
 
         yield break;
     }
+
+    // 타일로 이동 할 수 있는지 여부
+    // tileIndex : 현재 유닛의 위치 인덱스
+    // dir : 이동하고자 하는 방향
+    // unit : 이동하고자 하는 유닛
+    public int CheckMovableTile(int tileIndex, Vector3 dir, Unit unit)
+    {
+        int nextIndex = -1;
+        if ((dir - Vector3.forward).sqrMagnitude <= 0.01f)
+        {
+            nextIndex = tileIndex + tileCount.x;
+        }
+        else if ((dir - Vector3.back).sqrMagnitude <= 0.01f)
+        {
+            nextIndex = tileIndex - tileCount.x;
+        }
+        else if ((dir - Vector3.left).sqrMagnitude <= 0.01f)
+        {
+            nextIndex = (tileIndex % tileCount.x > 0) ? tileIndex - 1 : -1;
+        }
+        else if ((dir - Vector3.right).sqrMagnitude <= 0.01f)
+        {
+            nextIndex = (tileIndex % tileCount.x < (tileCount.x - 1)) ? tileIndex + 1 : -1;
+        }
+
+        // 타일 레이어 판정
+        if (nextIndex > -1)
+        {
+            Tile tile = GetTile(nextIndex);
+            if (tile)
+            {
+                if (LayerMask.LayerToName(tile.gameObject.layer) == "Tile_Block")
+                {
+                    nextIndex = -1;
+                }
+            }
+        }
+
+        return nextIndex;
+    }
+
+    public Tile GetTile(int tileIndex)
+    {
+        if (tiles.Length > tileIndex && tiles[tileIndex])
+        {
+            return tiles[tileIndex].GetComponent<Tile>();
+        }
+
+        return null;
+    }
+
+    // 타일 위치 반환. 로컬 좌표임
+    // 20 21 22 23 24
+    // 15 16 17 18 19
+    // 10 11 12 13 14
+    // 05 06 07 08 09
+    // 00 01 02 03 04
+    public Vector3 GetTilePosition(int tileIndex, bool isUnitPosition = false)
+    {
+        float x = ((tileIndex % tileCount.x) * tileSize.x) - (tileSize.x * tileCount.x * 0.5f) + (tileSize.x * 0.5f);
+        float z = ((tileIndex / tileCount.y) * tileSize.z) - (tileSize.z * tileCount.y * 0.5f) + (tileSize.z * 0.5f);
+
+        return new Vector3(x, 0.0f, z) + (isUnitPosition ? tileContainer.transform.position : Vector3.zero);
+    }
 }
 
 [CustomEditor(typeof(TileManager))]
@@ -401,15 +444,15 @@ public class TileManagerEditor : Editor
 
             System.Array.Resize(ref script.tilePrefabs, script.tileCount.x * script.tileCount.y);
 
-            int TileIndex = 0;
+            // 역순으로 돌아야 한다.
             for (int i = 0; i < script.tileCount.x; ++i)
             {
                 EditorGUILayout.BeginHorizontal();
 
+                int index = (script.tileCount.y - i - 1) * script.tileCount.x;
                 for (int j = 0; j < script.tileCount.y; ++j)
                 {
-                    script.tilePrefabs[TileIndex] = EditorGUILayout.ObjectField(script.tilePrefabs[TileIndex], typeof(GameObject), false) as GameObject;
-                    TileIndex++;
+                    script.tilePrefabs[index + j] = EditorGUILayout.ObjectField(script.tilePrefabs[index + j], typeof(GameObject), false) as GameObject;
                 }
 
                 EditorGUILayout.EndHorizontal();
