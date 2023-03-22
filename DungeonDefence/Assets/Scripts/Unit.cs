@@ -11,12 +11,15 @@ public class Unit : MonoBehaviour
     protected Tile targetTile;
     protected GameManager gameManager;
     protected TileManager tileManager;
+    protected bool IsOnGoal = false;
 
     // Start is called before the first frame update
     void Start()
     {
         gameManager = GameObject.Find("GameManager")?.GetComponent<GameManager>();
         tileManager = gameManager?.GetTileManager();
+
+        IsOnGoal = false;
 
         NavAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (NavAgent)
@@ -33,7 +36,7 @@ public class Unit : MonoBehaviour
         {
             if (NavAgent.remainingDistance <= NavAgent.stoppingDistance && NavAgent.velocity.sqrMagnitude == 0.00f)
             {
-                if (targetTile == tileManager.GetFinishTile())
+                if (IsOnGoal)
                 {
                     Debug.Log("\t\tI'm on goal");
                     // 목적지 도착 보고
@@ -81,19 +84,19 @@ public class Unit : MonoBehaviour
 
         // 해당 위치로 트레이스
         RaycastHit hitInfo;
-        if (Physics.Raycast(startPosition, transform.right, out hitInfo, maxDistance))
+        if (Physics.Raycast(startPosition, transform.right, out hitInfo, maxDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
         {
             // 막혔으면 정면
             maxDistance = CalcTileLength(transform.forward);
             if (maxDistance <= 0.00f) return null;
 
-            if (Physics.Raycast(startPosition, transform.forward, out hitInfo, maxDistance))
+            if (Physics.Raycast(startPosition, transform.forward, out hitInfo, maxDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
                 maxDistance = CalcTileLength(transform.right * -1.00f);
                 if (maxDistance <= 0.00f) return null;
 
                 // 막혔으면 왼쪽으로
-                if (Physics.Raycast(startPosition, transform.right * -1.00f, out hitInfo, maxDistance))
+                if (Physics.Raycast(startPosition, transform.right * -1.00f, out hitInfo, maxDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
                 {
                     // 여기까지 막혔다면 진출로가 없음.
                     Debug.Log("\tfailed to find movable direction");
@@ -138,5 +141,14 @@ public class Unit : MonoBehaviour
         Debug.Log("[Unit : FindNextTile] I'm on invalid rotation : " + forwardDir);
 
         return 0.00f;
+    }
+
+    protected void OnTriggerEnter(Collider other)
+    {
+        // 최종 목적지에 도착하였다면 
+        if (other.CompareTag("Tile_Finish"))
+        {
+            IsOnGoal = true;
+        }
     }
 }
