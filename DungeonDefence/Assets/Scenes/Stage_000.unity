@@ -1292,6 +1292,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc0ceb24779db894a945653c8b4cdfde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scrollView: {fileID: 1810135085}
+  myDeck:
+  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
+  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
+  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
+  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
+  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
+  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  dealDelay: 2
+  initialDealCards: 5
 --- !u!114 &295851332
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2597,7 +2611,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1053142595}
+  - {fileID: 1810135086}
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3657,7 +3671,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 825262724}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3666,10 +3680,10 @@ RectTransform:
   m_Father: {fileID: 1810135086}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 721, y: -158.5}
-  m_SizeDelta: {x: 20, y: -17}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &825262726
 MonoBehaviour:
@@ -3714,8 +3728,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 469962148}
   m_HandleRect: {fileID: 469962147}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.61
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3843,7 +3857,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 859595318}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3851,11 +3865,11 @@ RectTransform:
   m_Father: {fileID: 1231850536}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -539.99994, y: 142}
-  m_SizeDelta: {x: 1080, y: 300}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -0.41516113, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &859595320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4353,83 +4367,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1015409961}
   m_Mesh: {fileID: 4300124, guid: 353b40c6a1ff7dd469b9d1e4dc0f13a8, type: 3}
---- !u!1 &1053142594
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1053142595}
-  - component: {fileID: 1053142597}
-  - component: {fileID: 1053142596}
-  m_Layer: 5
-  m_Name: Panel
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1053142595
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053142594}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1810135086}
-  m_Father: {fileID: 564238221}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1053142596
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053142594}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1053142597
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1053142594}
-  m_CullTransparentMesh: 1
 --- !u!1 &1054545404
 GameObject:
   m_ObjectHideFlags: 0
@@ -5554,7 +5491,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d60c59e34a7e1fa4b8d57ea4c9da8fb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resolutionRate: {x: 9, y: 15.9}
+  resolutionRate: {x: 9, y: 19.5}
 --- !u!1 &1386687531
 GameObject:
   m_ObjectHideFlags: 0
@@ -5740,7 +5677,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1423782589}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -5749,10 +5686,10 @@ RectTransform:
   m_Father: {fileID: 1810135086}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 359, y: -160}
-  m_SizeDelta: {x: -17, y: 20}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 20}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1423782591
 MonoBehaviour:
@@ -5798,7 +5735,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1348582665}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99995345
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7013,7 +6950,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1810135085}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7021,13 +6958,13 @@ RectTransform:
   - {fileID: 1231850536}
   - {fileID: 1423782590}
   - {fileID: 825262725}
-  m_Father: {fileID: 1053142595}
+  m_Father: {fileID: 564238221}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 150}
-  m_SizeDelta: {x: 0, y: 300}
+  m_AnchoredPosition: {x: 45, y: 250}
+  m_SizeDelta: {x: -110, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1810135087
 MonoBehaviour:
@@ -7051,11 +6988,11 @@ MonoBehaviour:
   m_ScrollSensitivity: 1
   m_Viewport: {fileID: 1231850536}
   m_HorizontalScrollbar: {fileID: 1423782591}
-  m_VerticalScrollbar: {fileID: 0}
+  m_VerticalScrollbar: {fileID: 825262726}
   m_HorizontalScrollbarVisibility: 2
   m_VerticalScrollbarVisibility: 2
-  m_HorizontalScrollbarSpacing: -3
-  m_VerticalScrollbarSpacing: -3
+  m_HorizontalScrollbarSpacing: 1
+  m_VerticalScrollbarSpacing: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []

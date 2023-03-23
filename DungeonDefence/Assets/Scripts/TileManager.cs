@@ -131,8 +131,6 @@ public class TileManager : MonoBehaviour
         // 타일 전체 갯수
         int tileTotal = tileCount.x * tileCount.y;
 
-        Debug.Log("[TileManager : UpdateFloorTiles] " + floorTiles.Length);
-
         // 초과 타일 제거
         if (floorTiles.Length > tileTotal)
         {
@@ -263,8 +261,6 @@ public class TileManager : MonoBehaviour
                         // 다른 타일이라면 기존 타일 제거
                         if (tilePrefab.CompareTag(tiles[index].tag) == false)
                         {
-                            Debug.Log("\t\tDiff Tag");
-
                             DestroyImmediate(tiles[index]);
                             tiles[index] = null;
                         }
