@@ -11,21 +11,17 @@ public class GameManager : MonoBehaviour
         public List<GameObject> unitPrefabList;
     }
 
-    public GameObject floor;
-
-    [Header("Setting")]
     [SerializeField] protected List<WaveSpawnData> waveList = new();
-    [SerializeField] protected Vector3 SpawnDirection;
+    
+    public TileManager TileManager {get; set;}
+    public Inventory Inventory {get; set;}
 
-
-    protected TileManager tileManager;
     private List<GameObject> enemyList = new();
+
 
     // Start is called before the first frame update
     void Awake()
     {
-        tileManager = floor?.GetComponent<TileManager>();
-
         Debug.Log("[GameManager : Awake]");
     }
 
@@ -43,11 +39,6 @@ public class GameManager : MonoBehaviour
 
     }
 
-    public TileManager GetTileManager()
-    {
-        return tileManager;
-    }
-
     // 스테이지 시작
     public void StartStage()
     {
@@ -60,8 +51,12 @@ public class GameManager : MonoBehaviour
     // 게임 시작 가능 여부
     public bool IsGameStartable()
     {
+        Debug.Log("IsGameStartable : " + TileManager + " / " + Inventory);
         // 타일관리자 유효성 확인
-        if (tileManager == null || tileManager.IsGameStartable() == false)
+        if (!TileManager || TileManager.IsGameStartable() == false)
+            return false;
+
+        if (!Inventory)
             return false;
 
         return true;
@@ -85,14 +80,14 @@ public class GameManager : MonoBehaviour
     // 웨이브 생성하기. 코루틴 반복용
     IEnumerator SpawnWave(WaveSpawnData waveData)
     {
-        Tile startTile = tileManager.GetStartTile();
+        Tile startTile = TileManager.GetStartTile();
 
         foreach (GameObject unitPrefab in waveData.unitPrefabList)
         {
             if (unitPrefab != null)
             {
                 // 유닛 생성
-                Vector3 spawnPosition = tileManager.GetTilePosition(startTile.tileIndex, true);
+                Vector3 spawnPosition = TileManager.GetTilePosition(startTile.tileIndex, true);
                 spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
 
                 GameObject unit = GameObject.Instantiate<GameObject>(

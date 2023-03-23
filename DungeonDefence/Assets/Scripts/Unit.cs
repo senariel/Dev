@@ -20,7 +20,7 @@ public class Unit : MonoBehaviour
     void Start()
     {
         gameManager = GameObject.Find("GameManager")?.GetComponent<GameManager>();
-        tileManager = gameManager?.GetTileManager();
+        tileManager = gameManager.TileManager;
 
         IsOnGoal = false;
 

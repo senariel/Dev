@@ -9,6 +9,9 @@ public class TileManager : MonoBehaviour
     [HideInInspector] public Vector3 tileSize;
     [HideInInspector] public GameObject[] tilePrefabs = new GameObject[0];
 
+    // 타일이 설치 될 게임 오브젝트
+    public GameObject stage = null;
+
     // 최하단 타일(파괴 불가, 걷기용)
     public GameObject floorTilePrefab = null;
 
@@ -18,10 +21,25 @@ public class TileManager : MonoBehaviour
     [SerializeField, HideInInspector] protected GameObject[] tiles = new GameObject[0];
     [SerializeField, HideInInspector] protected Tile startTile = null;
     [SerializeField, HideInInspector] protected Tile finishTile = null;
+
+    protected GameManager gameManager = null;
     private bool isReady = false;
 
     void Awake()
     {
+        if (!stage)
+            return;
+
+        GameObject gm = GameObject.Find("GameManager");
+        if (!gm)
+            return;
+
+        gameManager = gm.GetComponent<GameManager>();
+        if (gameManager)
+        {
+            gameManager.TileManager = this;
+        }
+
         if (GenerateFloorTiles() == false)
             return;
 
@@ -90,7 +108,7 @@ public class TileManager : MonoBehaviour
         if (floorTileContainer == null)
         {
             // 검색 우선
-            Transform tf = transform.Find("Bottom");
+            Transform tf = stage.transform.Find("Bottom");
             if (tf != null)
             {
                 Debug.Log("[TileManager : UpdateFloorTiles] container is null but i found : " + floorTilePrefab);
@@ -105,7 +123,7 @@ public class TileManager : MonoBehaviour
                 return false;
 
             // 연결
-            floorTileContainer.transform.SetParent(transform);
+            floorTileContainer.transform.SetParent(stage.transform);
             floorTileContainer.layer = LayerMask.NameToLayer("Tile_Block");
         }
         floorTileContainer.transform.position = new Vector3(0.0f, tileSize.y / -2.0f, 0.0f);
@@ -177,7 +195,7 @@ public class TileManager : MonoBehaviour
         if (tileContainer == null)
         {
             // 검색 우선
-            Transform tf = transform.Find("Tiles");
+            Transform tf = stage.transform.Find("Tiles");
             if (tf != null)
             {
                 tileContainer = tf.gameObject;
@@ -191,7 +209,7 @@ public class TileManager : MonoBehaviour
                 return false;
 
             // 연결
-            tileContainer.transform.SetParent(transform);
+            tileContainer.transform.SetParent(stage.transform);
             tileContainer.layer = LayerMask.NameToLayer("Tile_Block");
         }
         tileContainer.transform.localPosition = new Vector3(0.0f, tileSize.y / 2.0f, 0.0f);

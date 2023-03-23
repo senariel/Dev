@@ -25,7 +25,7 @@ public class Tile : MonoBehaviour
     {
         GameObject obj = GameObject.Find("GameManager");
         GameManager gm = obj?.GetComponent<GameManager>();
-        tileManager = gm?.GetTileManager();
+        tileManager = gm?.TileManager;
     }
 
     // Update is called once per frame
