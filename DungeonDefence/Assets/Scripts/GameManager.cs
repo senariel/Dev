@@ -86,7 +86,7 @@ public class GameManager : MonoBehaviour
         {
             if (unitPrefab != null)
             {
-                GameObject unit = SpawnUnitOnTile(unitPrefab, startTile);
+                GameObject unit = SpawnUnitOnTile(unitPrefab, startTile.TileIndex);
                 if (unit != null)
                 {
                     enemyList.Add(unit);
@@ -105,28 +105,34 @@ public class GameManager : MonoBehaviour
         yield break;
     }
 
-    public GameObject SpawnUnitOnTile(GameObject unitPrefab, Tile tile)
+    // 바닥 타일임에 주의
+    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, GameObject unitInstance = null)
     {
         // 유닛 생성
-        Vector3 spawnPosition = TileManager.GetTilePosition(tile.TileIndex, true);
+        Tile startTile = TileManager.GetStartTile();
+        Tile tile = TileManager.GetTile(tileIndex);
+        Vector3 spawnPosition = TileManager.GetTilePosition(tileIndex, true);
         spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
 
-        GameObject unit = GameObject.Instantiate<GameObject>(
-            unitPrefab,
-            spawnPosition,
-            tile.transform.rotation);
-
-        if (unit)
+        if (unitInstance == null)
         {
-            Unit script = unit.GetComponent<Unit>();
+            unitInstance = GameObject.Instantiate<GameObject>(
+                unitPrefab,
+                spawnPosition,
+                startTile.transform.rotation);
+        }
+
+        if (unitInstance)
+        {
+            Unit script = unitInstance.GetComponent<Unit>();
             if (script)
             {
-                script.TileIndex = tile.TileIndex;
-                script.Direction = tile.transform.forward;
+                script.TileIndex = tileIndex;
+                script.Direction = startTile.transform.forward;
             }
         }
 
-        return unit;
+        return unitInstance;
     }
 
     // 유닛이 목적지에 도착함
