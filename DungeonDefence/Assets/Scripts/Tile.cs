@@ -12,24 +12,26 @@ public class Tile : MonoBehaviour
     private ParticleSystem fx;
 
     // 배치된 타일의 인덱스. Bottom 과 Upper 의 인덱스가 중복되는 것에 주의.
-    public int tileIndex {get; set;}
+    public int TileIndex {get; set;}
+
+    protected GameManager gameManager = null;
 
 
-    void Awake()
+    protected virtual void Awake()
     {
         
     }
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         GameObject obj = GameObject.Find("GameManager");
-        GameManager gm = obj?.GetComponent<GameManager>();
-        tileManager = gm?.TileManager;
+        gameManager = obj?.GetComponent<GameManager>();
+        tileManager = gameManager?.TileManager;
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
         if (fx)
         {
@@ -54,4 +56,6 @@ public class Tile : MonoBehaviour
             tileManager.BreakTile(this);
         }
     }
+
+    public virtual void Enter(Unit unit)  {}
 }

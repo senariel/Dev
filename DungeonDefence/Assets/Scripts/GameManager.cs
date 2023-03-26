@@ -12,9 +12,9 @@ public class GameManager : MonoBehaviour
     }
 
     [SerializeField] protected List<WaveSpawnData> waveList = new();
-    
-    public TileManager TileManager {get; set;}
-    public Inventory Inventory {get; set;}
+
+    public TileManager TileManager { get; set; }
+    public Inventory Inventory { get; set; }
 
     private List<GameObject> enemyList = new();
 
@@ -86,18 +86,16 @@ public class GameManager : MonoBehaviour
         {
             if (unitPrefab != null)
             {
-                // 유닛 생성
-                Vector3 spawnPosition = TileManager.GetTilePosition(startTile.tileIndex, true);
-                spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
-
-                GameObject unit = GameObject.Instantiate<GameObject>(
-                    unitPrefab,
-                    spawnPosition,
-                    startTile.transform.rotation);
-
+                GameObject unit = SpawnUnitOnTile(unitPrefab, startTile);
                 if (unit != null)
                 {
                     enemyList.Add(unit);
+
+                    Unit script = unit.GetComponent<Unit>();
+                    if (script)
+                    {
+                        script.Activate();
+                    }
                 }
             }
 
@@ -105,6 +103,30 @@ public class GameManager : MonoBehaviour
         }
 
         yield break;
+    }
+
+    public GameObject SpawnUnitOnTile(GameObject unitPrefab, Tile tile)
+    {
+        // 유닛 생성
+        Vector3 spawnPosition = TileManager.GetTilePosition(tile.TileIndex, true);
+        spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
+
+        GameObject unit = GameObject.Instantiate<GameObject>(
+            unitPrefab,
+            spawnPosition,
+            tile.transform.rotation);
+
+        if (unit)
+        {
+            Unit script = unit.GetComponent<Unit>();
+            if (script)
+            {
+                script.TileIndex = tile.TileIndex;
+                script.Direction = tile.transform.forward;
+            }
+        }
+
+        return unit;
     }
 
     // 유닛이 목적지에 도착함
