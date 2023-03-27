@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3204572942976974573}
   - component: {fileID: 4412417378709674345}
   - component: {fileID: 3632447679652240312}
+  - component: {fileID: -5763517544933630119}
   m_Layer: 6
   m_Name: Human_01
   m_TagString: Untagged
@@ -102,10 +103,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoActivate: 0
-  HP: 0
-  Power: 0
-  Armor: 0
-  AttackSpeed: 0
+  HP: 1
+  Power: 2
+  Armor: 1
+  AttackSpeed: 1
+  TeamID: 1
   actionDelay: 0.2
 --- !u!114 &3632447679652240312
 MonoBehaviour:
@@ -117,6 +119,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 710a068bf0166ae4dbedfdf43784ba49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-5763517544933630119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5297548591669641298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9876b89666ee0f46a8b782f36eb561f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &2627279624485949994
