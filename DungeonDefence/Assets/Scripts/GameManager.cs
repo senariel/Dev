@@ -11,12 +11,15 @@ public class GameManager : MonoBehaviour
         public List<GameObject> unitPrefabList;
     }
 
+    // 플레이어의 방어 유닛 카드?
+    public GameObject bossUnit;
     [SerializeField] protected List<WaveSpawnData> waveList = new();
 
     public TileManager TileManager { get; set; }
     public Inventory Inventory { get; set; }
 
-    private List<GameObject> enemyList = new();
+    protected List<GameObject> enemyList = new();
+    protected List<GameObject> playerUnitList = new();
 
 
     // Start is called before the first frame update
@@ -44,6 +47,9 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[StartGame]");
 
+        // 초기 플레이어 유닛 생성
+        SpawnPlayerUnits();
+
         // 웨이브 시작
         StartWave(0);
     }
@@ -59,6 +65,20 @@ public class GameManager : MonoBehaviour
             return false;
 
         return true;
+    }
+
+    // 플레이어의 기본 유닛 생성
+    protected void SpawnPlayerUnits()
+    {
+        Tile finishTile = TileManager.GetFinishTile();
+        if (finishTile)
+        {
+            GameObject unit = SpawnUnitOnTile(bossUnit, finishTile.TileIndex, true);
+            if (unit)
+            {
+                playerUnitList.Add(unit);
+            }
+        }
     }
 
 
@@ -105,32 +125,30 @@ public class GameManager : MonoBehaviour
     }
 
     // 바닥 타일임에 주의
-    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, GameObject unitInstance = null)
+    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, bool isDefenceUnit = false, GameObject unitInstance = null)
     {
         // 유닛 생성
-        Tile startTile = TileManager.GetStartTile();
         Tile tile = TileManager.GetTile(tileIndex);
         Vector3 spawnPosition = TileManager.GetTilePosition(tileIndex, true);
         spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
 
         if (unitInstance == null)
         {
-            unitInstance = GameObject.Instantiate<GameObject>(
-                unitPrefab,
-                spawnPosition,
-                startTile.transform.rotation);
+            unitInstance = GameObject.Instantiate<GameObject>(unitPrefab);
         }
 
         if (unitInstance)
         {
+            // 유닛 생성 및 진행 방향 확인
+            Quaternion spawnRotation = isDefenceUnit ? TileManager.GetFinishTile().transform.rotation : TileManager.GetStartTile().transform.rotation;
             unitInstance.transform.position = spawnPosition;
-            unitInstance.transform.rotation = startTile.transform.rotation;
+            unitInstance.transform.rotation = spawnRotation;
 
             Unit script = unitInstance.GetComponent<Unit>();
             if (script)
             {
                 script.TileIndex = tileIndex;
-                script.Direction = startTile.transform.forward;
+                script.Direction = unitInstance.transform.forward;
             }
         }
 
