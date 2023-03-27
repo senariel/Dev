@@ -8,6 +8,8 @@ public class Action_TileMove : Action
     protected Animator animator = null;
 
     protected TileManager tileManager = null;
+    // 목표 타일 인덱스
+    protected int targetTileIndex = -1;
 
 
     protected override void Awake()
@@ -62,6 +64,8 @@ public class Action_TileMove : Action
     {
         base.OnBeginPlay();
 
+        targetTileIndex = -1;
+
         MoveToNextTile();
     }
 
@@ -71,18 +75,18 @@ public class Action_TileMove : Action
         // 다음 타일 인덱스 찾기
         // step #1. 오른쪽 확인
         Vector3 dir = Quaternion.AngleAxis(90.0f, Vector3.up) * owner.Direction;
-        int nextTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-        if (nextTileIndex == -1)
+        targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
+        if (targetTileIndex == -1)
         {
             // step #2. 정면 확인
             dir = owner.Direction;
-            nextTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-            if (nextTileIndex == -1)
+            targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
+            if (targetTileIndex == -1)
             {
                 // step #3. 왼쪽 확인
                 dir = Quaternion.AngleAxis(-90.0f, Vector3.up) * owner.Direction;
-                nextTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-                if (nextTileIndex == -1)
+                targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
+                if (targetTileIndex == -1)
                 {
                     Debug.Log("Failed to find next tile!");
 
@@ -91,10 +95,10 @@ public class Action_TileMove : Action
             }
         }
 
+        // 방향 갱신
         owner.Direction = dir;
-        owner.TileIndex = nextTileIndex;
 
-        Vector3 nextPosition = tileManager.GetTilePosition(nextTileIndex, true);
+        Vector3 nextPosition = tileManager.GetTilePosition(targetTileIndex, true);
         nextPosition.y += (owner.GetComponent<CapsuleCollider>().height * 0.5f);
 
         if (navAgent.SetDestination(nextPosition) == false)
@@ -106,6 +110,9 @@ public class Action_TileMove : Action
     // 이동 완료 처리
     protected void OnMoveFinished()
     {
+        // 도착하였으므로 위치를 갱신한다.
+        owner.TileIndex = targetTileIndex;
+        
         navAgent.ResetPath();
 
         Finish();
