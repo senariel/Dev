@@ -26,7 +26,7 @@ public class TileManagerEditor : Editor
         script.tileCount = EditorGUILayout.Vector2IntField("TileMap Size", script.tileCount);
         script.tileSize = EditorGUILayout.Vector3Field("Tile Size", script.tileSize);
 
-        isFoldOut = EditorGUILayout.Foldout(isFoldOut, "Tile Settings");
+        isFoldOut = EditorGUILayout.Foldout(isFoldOut, "Tile Map");
         if (isFoldOut)
         {
             GUILayout.BeginVertical(new GUIStyle(GUI.skin.window));

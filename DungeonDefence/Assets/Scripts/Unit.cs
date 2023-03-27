@@ -11,6 +11,9 @@ public class Unit : MonoBehaviour
     protected GameManager gameManager;
     protected TileManager tileManager;
 
+    // Start() 시 자동으로 Activate 될지 여부
+    public bool autoActivate = false;
+    
     public int HP;
     // 공격력
     public int Power;
@@ -19,8 +22,6 @@ public class Unit : MonoBehaviour
     //공격속도
     public float AttackSpeed;
 
-    // Start() 시 자동으로 Activate 될지 여부
-    public bool autoActivate = false;
     // 액션 간 지연 시간
     public float actionDelay = 1.0f;
 
