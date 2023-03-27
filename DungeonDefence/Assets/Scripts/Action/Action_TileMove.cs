@@ -5,6 +5,8 @@ using UnityEngine;
 public class Action_TileMove : Action
 {
     protected UnityEngine.AI.NavMeshAgent navAgent = null;
+    protected Animator animator = null;
+
     protected TileManager tileManager = null;
 
 
@@ -13,6 +15,7 @@ public class Action_TileMove : Action
         base.Awake();
 
         navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        animator = GetComponentInChildren<Animator>();
 
         GameManager gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         tileManager = gm?.TileManager;
@@ -31,8 +34,15 @@ public class Action_TileMove : Action
 
         if (!isPlaying) return;
 
+        // 애니메이션 연출
+        if (animator)
+        {
+            animator.SetFloat("Speed", navAgent.velocity.magnitude);
+        }
+
         // 도착 여부
-        if ((navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
+        // 경로 계산 중이라면 이동 중인 것으로 판단
+        if (!navAgent.pathPending && (navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
         {
             OnMoveFinished();
         }

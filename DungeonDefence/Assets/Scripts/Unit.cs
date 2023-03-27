@@ -13,7 +13,7 @@ public class Unit : MonoBehaviour
 
     // Start() 시 자동으로 Activate 될지 여부
     public bool autoActivate = false;
-    
+
     public int HP;
     // 공격력
     public int Power;
@@ -66,6 +66,7 @@ public class Unit : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
     }
 
     public virtual void Activate(bool bActive = true)
@@ -88,12 +89,12 @@ public class Unit : MonoBehaviour
 
     protected virtual void OnActivated()
     {
-        OnUnitActivated(true);
+        if (OnUnitActivated != null) OnUnitActivated(true);
     }
 
     protected virtual void OnDeactivated()
     {
-        OnUnitActivated(false);
+        if (OnUnitActivated != null) OnUnitActivated(false);
     }
 
     // 액션 갱신

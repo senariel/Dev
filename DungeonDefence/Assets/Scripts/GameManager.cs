@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
     protected void SpawnPlayerUnits()
     {
         Tile finishTile = TileManager.GetFinishTile();
-        if (finishTile)
+        if (finishTile && bossUnit)
         {
             GameObject unit = SpawnUnitOnTile(bossUnit, finishTile.TileIndex, true);
             if (unit)

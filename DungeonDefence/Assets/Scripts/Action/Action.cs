@@ -58,8 +58,8 @@ public class Action : MonoBehaviour
         OnEndPlay();
     }
 
-    protected virtual void OnBeginPlay() { OnActionBeginPlay(this); }
-    protected virtual void OnEndPlay() { OnActionEndPlay(this); }
+    protected virtual void OnBeginPlay() { if (OnActionBeginPlay != null) OnActionBeginPlay(this); }
+    protected virtual void OnEndPlay() { if (OnActionEndPlay != null) OnActionEndPlay(this); }
 
     public virtual void OnUnitActiveChanged(bool isActivated) { }
 }
