@@ -387,16 +387,17 @@ public class TileManager : MonoBehaviour
             nextIndex = (tileIndex % tileCount.x < (tileCount.x - 1)) ? tileIndex + 1 : -1;
         }
 
-        // 타일 레이어 판정
-        if (nextIndex > -1)
+        // 범위를 벗어난 인덱스
+        if (nextIndex < 0 || nextIndex >= (tileCount.x * tileCount.y))
+            return -1;
+
+        // 방해 블럭 타일 판단
+        Tile tile = GetTile(nextIndex);
+        if (tile)
         {
-            Tile tile = GetTile(nextIndex);
-            if (tile)
+            if (LayerMask.LayerToName(tile.gameObject.layer) == "Tile_Block")
             {
-                if (LayerMask.LayerToName(tile.gameObject.layer) == "Tile_Block")
-                {
-                    nextIndex = -1;
-                }
+                return -1;
             }
         }
 
@@ -405,7 +406,7 @@ public class TileManager : MonoBehaviour
 
     public Tile GetTile(int tileIndex)
     {
-        if (tiles.Length > tileIndex && tiles[tileIndex])
+        if (tileIndex > -1 && tiles.Length > tileIndex && tiles[tileIndex] && tiles[tileIndex] != null)
         {
             return tiles[tileIndex].GetComponent<Tile>();
         }
