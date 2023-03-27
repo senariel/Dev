@@ -6,7 +6,7 @@ public class Action_TileMove : Action
 {
     protected UnityEngine.AI.NavMeshAgent navAgent = null;
     protected TileManager tileManager = null;
-    
+
 
     protected override void Awake()
     {
@@ -48,20 +48,6 @@ public class Action_TileMove : Action
         return false;
     }
 
-    // 이동 완료 처리
-    protected void OnMoveFinished()
-    {
-        navAgent.ResetPath();
-        
-        Finish();
-
-        Tile tile = tileManager.GetTile(owner.TileIndex);
-        if (tile)
-        {
-            tile.Enter(owner);
-        }
-    }
-
     protected override void OnBeginPlay()
     {
         base.OnBeginPlay();
@@ -69,7 +55,7 @@ public class Action_TileMove : Action
         MoveToNextTile();
     }
 
-        // 다음 타일로 이동
+    // 다음 타일로 이동
     void MoveToNextTile()
     {
         // 다음 타일 인덱스 찾기
@@ -104,6 +90,20 @@ public class Action_TileMove : Action
         if (navAgent.SetDestination(nextPosition) == false)
         {
             Debug.Log("Failed to SetDestination" + nextPosition);
+        }
+    }
+
+    // 이동 완료 처리
+    protected void OnMoveFinished()
+    {
+        navAgent.ResetPath();
+
+        Finish();
+
+        Tile tile = tileManager.GetTile(owner.TileIndex);
+        if (tile)
+        {
+            tile.Enter(owner);
         }
     }
 }

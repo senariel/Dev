@@ -16,12 +16,21 @@ public class Action : MonoBehaviour
     protected virtual void Awake()
     {
         owner = GetComponent<Unit>();
+        if (owner)
+        {
+            owner.OnUnitActivated += OnUnitActiveChanged;
+        }
     }
 
     // Start is called before the first frame update
     protected virtual void Start()
     {
-
+        if (owner)
+        {
+            // 최초 유닛 활성 상태 갱신.
+            // 이후에는 delegate 로 받음
+            OnUnitActiveChanged(owner.IsActivated);
+        }
     }
 
     // Update is called once per frame
@@ -52,4 +61,5 @@ public class Action : MonoBehaviour
     protected virtual void OnBeginPlay() { OnActionBeginPlay(this); }
     protected virtual void OnEndPlay() { OnActionEndPlay(this); }
 
+    public virtual void OnUnitActiveChanged(bool isActivated) { }
 }

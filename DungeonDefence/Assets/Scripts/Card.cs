@@ -39,31 +39,37 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("OnBeginDrag : " + eventData.position);
-
         // 연출
         rectTransform.anchoredPosition += new Vector2(0.0f, 50.0f);
 
         unitInstance = Instantiate(unitPrefab);
+        unitInstance.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
         unitInstance.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+        
         UpdateUnitPosition(unitInstance, eventData.position);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("OnEndDrop : " + eventData.position);
-
         // 연출
         rectTransform.anchoredPosition -= new Vector2(0.0f, 50.0f);
 
         Tile tile = GetTileAtPoint(eventData.position);
         if (tile)
         {
+            unitInstance.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             unitInstance.GetComponent<Rigidbody>().constraints = unitPrefab.GetComponent<Rigidbody>().constraints;
 
             gameManager.SpawnUnitOnTile(unitPrefab, tile.TileIndex, unitInstance);
+
+            unitInstance = null;
+            Destroy(gameObject);
         }
-        
+        else
+        {
+            Destroy(unitInstance);
+            unitInstance = null;
+        }
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -75,31 +81,40 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
     {
         if (!unit) return false;
         
+        // 유닛은 통과해서 레이캐스트
         Ray ray = Camera.main.ScreenPointToRay(screenPoint);
         RaycastHit hitInfo;
-        if (Physics.Raycast(ray, out hitInfo))
+        if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, ~(1 << LayerMask.NameToLayer("Unit"))))
         {
-            Vector3 position = hitInfo.point;
-            position.y += unit.GetComponent<CapsuleCollider>().height * 0.5f;
+            // 바닥 타일에 닿았을 때만 유효
+            if (hitInfo.collider.gameObject.layer == LayerMask.NameToLayer("Tile_Bottom"))
+            {
+                Vector3 position = hitInfo.point;
+                position.y += unit.GetComponent<CapsuleCollider>().height * 0.5f;
 
-            unit.transform.position = position;
-        }
-        else
-        {
-            unit.transform.position = ray.origin * 10.0f;
-        }
+                unit.transform.position = position;
 
-        return true;
+                return true;
+            }
+        }
+        
+        unit.transform.position = ray.origin + (ray.direction * 10.0f);
+
+        return false;
     }
 
     protected Tile GetTileAtPoint(Vector2 screenPoint)
     {
         Ray ray = Camera.main.ScreenPointToRay(screenPoint);
         RaycastHit hitInfo;
-        if (Physics.Raycast(ray, out hitInfo))
+        if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, ~(1 << LayerMask.NameToLayer("Unit"))))
         {
-            return hitInfo.collider.GetComponent<Tile>();
+            if (hitInfo.collider.gameObject.layer == LayerMask.NameToLayer("Tile_Bottom"))
+            {
+                return hitInfo.collider.GetComponent<Tile>();
+            }
         }
+
         return null;
     }
 }

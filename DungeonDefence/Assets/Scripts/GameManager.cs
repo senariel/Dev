@@ -51,7 +51,6 @@ public class GameManager : MonoBehaviour
     // 게임 시작 가능 여부
     public bool IsGameStartable()
     {
-        Debug.Log("IsGameStartable : " + TileManager + " / " + Inventory);
         // 타일관리자 유효성 확인
         if (!TileManager || TileManager.IsGameStartable() == false)
             return false;
@@ -124,6 +123,9 @@ public class GameManager : MonoBehaviour
 
         if (unitInstance)
         {
+            unitInstance.transform.position = spawnPosition;
+            unitInstance.transform.rotation = startTile.transform.rotation;
+
             Unit script = unitInstance.GetComponent<Unit>();
             if (script)
             {

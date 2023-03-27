@@ -17,10 +17,10 @@ TagManager:
   - Water
   - UI
   - Unit
-  - Tile_Block
-  - Tile_Trap
+  - Tile_Bottom
+  - Tile_Upper
   - Tile_System
-  - 
+  - Tile_Block
   - 
   - 
   - 

@@ -2,8 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public delegate void UnitActivateEventHandler(bool isActivated);
+
 public class Unit : MonoBehaviour
 {
+    public event UnitActivateEventHandler OnUnitActivated;
+
     protected GameManager gameManager;
     protected TileManager tileManager;
 
@@ -28,7 +32,7 @@ public class Unit : MonoBehaviour
     // 현재 위치(타일 인덱스)
     public int TileIndex { get; set; }
     // 활성화 여부
-    protected bool IsActivated { get; set; }
+    public bool IsActivated { get; set; }
 
     // 유닛의 진행 방향
     public Vector3 Direction { get; set; }
@@ -81,8 +85,15 @@ public class Unit : MonoBehaviour
         }
     }
 
-    protected virtual void OnActivated() { }
-    protected virtual void OnDeactivated() { }
+    protected virtual void OnActivated()
+    {
+        OnUnitActivated(true);
+    }
+
+    protected virtual void OnDeactivated()
+    {
+        OnUnitActivated(false);
+    }
 
     // 액션 갱신
     virtual protected void UpdateAction()

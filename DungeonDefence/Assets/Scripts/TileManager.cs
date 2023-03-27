@@ -123,7 +123,7 @@ public class TileManager : MonoBehaviour
 
             // 연결
             floorTileContainer.transform.SetParent(stage.transform);
-            floorTileContainer.layer = LayerMask.NameToLayer("Tile_Block");
+            floorTileContainer.layer = LayerMask.NameToLayer("Tile_Bottom");
         }
         floorTileContainer.transform.position = new Vector3(0.0f, tileSize.y / -2.0f, 0.0f);
 
@@ -167,11 +167,12 @@ public class TileManager : MonoBehaviour
                 if (tile != null)
                 {
                     tile.name = "BottomTile_" + index;
+                    tile.layer = floorTileContainer.layer;       // 레이어 셋팅
                     tile.transform.SetLocalPositionAndRotation(GetTilePosition(index), floorTilePrefab.transform.rotation);
                     tile.transform.localScale = baseScale;
+                    tile.isStatic = true;                       // 바닥 타일은 정적으로 고정
 
-                    // 바닥 타일은 정적으로 고정
-                    tile.isStatic = true;
+                    tile.GetComponent<Tile>().TileIndex = index;
 
                     floorTiles[index] = tile;
                 }
@@ -207,8 +208,9 @@ public class TileManager : MonoBehaviour
 
             // 연결
             tileContainer.transform.SetParent(stage.transform);
-            tileContainer.layer = LayerMask.NameToLayer("Tile_Block");
+            tileContainer.layer = LayerMask.NameToLayer("Tile_Upper");
         }
+
         tileContainer.transform.localPosition = new Vector3(0.0f, tileSize.y / 2.0f, 0.0f);
 
         // 타일 전체 갯수
