@@ -41,7 +41,7 @@ public class Action : MonoBehaviour
 
     public virtual bool CanPlay(Unit unit)
     {
-        return true;
+        return (unit.TileIndex > -1);
     }
 
     public void Play()

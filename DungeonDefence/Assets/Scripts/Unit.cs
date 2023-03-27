@@ -19,8 +19,10 @@ public class Unit : MonoBehaviour
     public int Power;
     // 방어력
     public int Armor;
-    //공격속도
+    //공격속도(초당 공격 횟수)
     public float AttackSpeed;
+    // 팀 번호. 플레이어는 0
+    public int TeamID;
 
     // 액션 간 지연 시간
     public float actionDelay = 1.0f;
@@ -29,6 +31,9 @@ public class Unit : MonoBehaviour
     protected int currentHP;
     // 현재 수행 중인 행동
     protected Action currentAction = null;
+
+    // 액션의 대상(유닛, 블럭 등등)
+    public GameObject ActionTarget {get; set;}
 
     // 현재 위치(타일 인덱스)
     public int TileIndex { get; set; }
@@ -49,6 +54,7 @@ public class Unit : MonoBehaviour
 
         TileIndex = -1;
         Direction = Vector3.zero;
+        ActionTarget = null;
 
         actionBeginHandler = new ActionEventHandler(NotifyActionBeginPlay);
         actionEndHandler = new ActionEventHandler(NotifyActionEndPlay);
@@ -57,6 +63,8 @@ public class Unit : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        currentHP = HP;
+
         if (autoActivate)
         {
             Activate(true);
@@ -98,9 +106,11 @@ public class Unit : MonoBehaviour
     }
 
     // 액션 갱신
-    virtual protected void UpdateAction()
+    protected virtual void UpdateAction()
     {
         if (currentAction) return;
+
+        ActionTarget = UpdateActionTarget();
 
         // 수행 중인 행동이 없다면 다음 행동 결정
         Action nextAction = ChooseAction();
@@ -108,11 +118,38 @@ public class Unit : MonoBehaviour
         {
             StartAction(nextAction);
         }
+        else
+        {
+            // 수행 할 액션을 찾지 못했다면 대기
+            Invoke("UpdateAction", actionDelay);
+        }
+    }
+
+    protected virtual GameObject UpdateActionTarget()
+    {
+        // 사정거리 판단
+        // 현재는 겹쳐진 타일 위의 유닛
+        List<GameObject> list = gameManager.GetUnitsOnTile(TileIndex);
+
+        // 상호작용 우선 순위?
+        foreach (GameObject obj in list)
+        {
+            // 일단은 적만 상대합니다.
+            if (obj.layer != LayerMask.NameToLayer("Unit")) continue;
+            
+            Unit unit = obj.GetComponent<Unit>();
+            if (unit && IsEnemy(unit))
+            {
+                return obj;
+            }
+        }
+
+        return null;
     }
 
     // 수행 가능한 액션을 선택한다.
     // 기본은 리스트 우선순위
-    virtual protected Action ChooseAction()
+    protected virtual Action ChooseAction()
     {
         List<Action> list = new();
         GetComponents<Action>(list);
@@ -130,6 +167,8 @@ public class Unit : MonoBehaviour
 
     public void StartAction(Action action)
     {
+        // Debug.Log("[StartAction] " + action);
+
         currentAction = action;
 
         // 이벤트 핸들러 연결
@@ -148,6 +187,8 @@ public class Unit : MonoBehaviour
             Debug.Log("\tInvalid action  " + action + " / " + currentAction);
             return;
         }
+
+        // Debug.Log("[EndAction] " + action);
 
         // 이벤트 핸들러 연결 해제
         currentAction.OnActionBeginPlay -= actionBeginHandler;
@@ -179,6 +220,12 @@ public class Unit : MonoBehaviour
     }
 
 
+    public bool IsAlive()
+    {
+        // 체력이 0 초과?
+        return currentHP > 0;
+    }
+
     // 데미지 받기.
     // 데미지량 계산은 GameManager 에서 처리한 값이어야 한다.
     public void TakeDamage(GameObject instigator, int amount)
@@ -187,7 +234,7 @@ public class Unit : MonoBehaviour
 
         if (currentHP <= 0)
         {
-            Death();
+            gameManager.NotifyDead(this);
         }
         else
         {
@@ -197,7 +244,7 @@ public class Unit : MonoBehaviour
 
     protected virtual void OnTakeDamage(GameObject instigator, int amount)
     {
-
+        Debug.Log("[TakeDamage " + gameObject + "] " + amount + " by " + instigator + " : " + currentHP + " / " + HP);
     }
 
     public void Death()
@@ -209,6 +256,16 @@ public class Unit : MonoBehaviour
 
     protected virtual void OnDeath()
     {
+        Destroy(gameObject);
+    }
 
+    public bool IsEnemy(Unit unit)
+    {
+        return IsEnemy(unit.TeamID);
+    }
+
+    public bool IsEnemy(int teamID)
+    {
+        return teamID != TeamID;
     }
 }

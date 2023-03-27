@@ -13,13 +13,23 @@ public class GameManager : MonoBehaviour
 
     // 플레이어의 방어 유닛 카드?
     public GameObject bossUnit;
-    [SerializeField] protected List<WaveSpawnData> waveList = new();
+    public List<WaveSpawnData> waveList = new();
+    // 웨이브 간 대기 시간
+    public float waveDelay;
 
+    public GameManager(TileManager tileManager, Inventory inventory)
+    {
+        this.TileManager = tileManager;
+        this.Inventory = inventory;
+
+    }
     public TileManager TileManager { get; set; }
     public Inventory Inventory { get; set; }
 
-    protected List<GameObject> enemyList = new();
-    protected List<GameObject> playerUnitList = new();
+    protected List<GameObject> unitList;
+    protected Unit bossInstance = null;
+    // 현재 웨이브 인덱스
+    protected int currentWaveIndex = -1;
 
 
     // Start is called before the first frame update
@@ -46,12 +56,14 @@ public class GameManager : MonoBehaviour
     public void StartStage()
     {
         Debug.Log("[StartGame]");
+        
+        unitList = new();
 
         // 초기 플레이어 유닛 생성
         SpawnPlayerUnits();
 
         // 웨이브 시작
-        StartWave(0);
+        StartCoroutine(StartWave());
     }
 
     // 게임 시작 가능 여부
@@ -73,27 +85,23 @@ public class GameManager : MonoBehaviour
         Tile finishTile = TileManager.GetFinishTile();
         if (finishTile && bossUnit)
         {
-            GameObject unit = SpawnUnitOnTile(bossUnit, finishTile.TileIndex, true);
+            GameObject unit = SpawnUnitOnTile(bossUnit, finishTile.TileIndex, 0);
             if (unit)
             {
-                playerUnitList.Add(unit);
+                bossInstance = unit.GetComponent<Unit>();
             }
         }
     }
 
-
     // 웨이브 생성
-    bool StartWave(int waveIndex)
+    protected IEnumerator StartWave()
     {
-        Debug.Log("[StartWave] " + waveIndex);
-        if (waveList.Count > waveIndex)
+        for (int i = 0; i < waveList.Count; ++i)
         {
-            StartCoroutine(SpawnWave(waveList[waveIndex]));
+            yield return SpawnWave(waveList[i]);
+
+            yield return new WaitForSeconds(waveDelay);
         }
-
-        Debug.Log("[StartWave] end");
-
-        return true;
     }
 
     // 웨이브 생성하기. 코루틴 반복용
@@ -105,27 +113,15 @@ public class GameManager : MonoBehaviour
         {
             if (unitPrefab != null)
             {
-                GameObject unit = SpawnUnitOnTile(unitPrefab, startTile.TileIndex);
-                if (unit != null)
-                {
-                    enemyList.Add(unit);
-
-                    Unit script = unit.GetComponent<Unit>();
-                    if (script)
-                    {
-                        script.Activate();
-                    }
-                }
+                SpawnUnitOnTile(unitPrefab, startTile.TileIndex);
             }
 
             yield return new WaitForSeconds(waveData.delay);
         }
-
-        yield break;
     }
 
     // 바닥 타일임에 주의
-    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, bool isDefenceUnit = false, GameObject unitInstance = null)
+    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, int teamID = -1, GameObject unitInstance = null)
     {
         // 유닛 생성
         Tile tile = TileManager.GetTile(tileIndex);
@@ -140,25 +136,68 @@ public class GameManager : MonoBehaviour
         if (unitInstance)
         {
             // 유닛 생성 및 진행 방향 확인
-            Quaternion spawnRotation = isDefenceUnit ? TileManager.GetFinishTile().transform.rotation : TileManager.GetStartTile().transform.rotation;
+            Quaternion spawnRotation = (teamID == 0) ? TileManager.GetFinishTile().transform.rotation : TileManager.GetStartTile().transform.rotation;
             unitInstance.transform.position = spawnPosition;
             unitInstance.transform.rotation = spawnRotation;
 
             Unit script = unitInstance.GetComponent<Unit>();
             if (script)
             {
+                unitList.Add(unitInstance);
+
+                script.TeamID = (teamID == -1) ? unitPrefab.GetComponent<Unit>().TeamID : teamID;
                 script.TileIndex = tileIndex;
                 script.Direction = unitInstance.transform.forward;
+                script.Activate();
             }
         }
 
         return unitInstance;
     }
 
+    public void NotifyHit(Unit instigator, Unit victim)
+    {
+        // 계산은 일단 단순하게
+        victim.TakeDamage(instigator.gameObject, instigator.Power - victim.Armor);
+    }
+
+    public void NotifyDead(Unit unit)
+    {
+        if (unit)
+        {
+            unitList.Remove(unit.gameObject);
+
+            if (unit == bossInstance)
+            {
+                Debug.Log("Game Over");
+            }
+
+            unit.Death();
+        }
+    }
+
     // 유닛이 목적지에 도착함
     public void UnitReachedFinish(Unit enemy)
     {
         Destroy(enemy.gameObject);
+    }
+
+    public List<GameObject> GetUnitsOnTile(int tileIndex)
+    {
+        List<GameObject> list = new();
+
+        foreach (GameObject obj in unitList)
+        {
+            Unit unit = obj.GetComponent<Unit>();
+            if (!unit) continue;
+
+            if (unit.TileIndex == tileIndex)
+            {
+                list.Add(obj);
+            }
+        }
+
+        return list;
     }
 }
 

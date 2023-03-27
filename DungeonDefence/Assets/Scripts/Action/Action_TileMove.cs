@@ -50,7 +50,7 @@ public class Action_TileMove : Action
 
     public override bool CanPlay(Unit unit)
     {
-        if (base.CanPlay(unit) && tileManager && navAgent && (unit.TileIndex > -1))
+        if (base.CanPlay(unit) && tileManager && navAgent && owner.ActionTarget == null)
         {
             return true;
         }

@@ -20,6 +20,6 @@ public class Tile_Finish : Tile
     {
         base.Enter(unit);
 
-        gameManager.UnitReachedFinish(unit);
+        // gameManager.UnitReachedFinish(unit);
     }
 }

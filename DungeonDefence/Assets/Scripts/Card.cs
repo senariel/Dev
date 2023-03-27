@@ -60,7 +60,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
             unitInstance.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             unitInstance.GetComponent<Rigidbody>().constraints = unitPrefab.GetComponent<Rigidbody>().constraints;
 
-            gameManager.SpawnUnitOnTile(unitPrefab, tile.TileIndex, true, unitInstance);
+            gameManager.SpawnUnitOnTile(unitPrefab, tile.TileIndex, 0, unitInstance);
 
             unitInstance = null;
             Destroy(gameObject);
