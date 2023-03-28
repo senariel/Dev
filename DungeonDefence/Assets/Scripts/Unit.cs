@@ -55,6 +55,7 @@ public class Unit : MonoBehaviour
         TileIndex = -1;
         Direction = Vector3.zero;
         ActionTarget = null;
+        currentHP = HP;
 
         actionBeginHandler = new ActionEventHandler(NotifyActionBeginPlay);
         actionEndHandler = new ActionEventHandler(NotifyActionEndPlay);
@@ -63,8 +64,6 @@ public class Unit : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        currentHP = HP;
-
         if (autoActivate)
         {
             Activate(true);
@@ -87,7 +86,8 @@ public class Unit : MonoBehaviour
         {
             OnActivated();
 
-            UpdateAction();
+            // 액션 루프
+            StartCoroutine(UpdateAction());
         }
         else
         {
@@ -106,28 +106,33 @@ public class Unit : MonoBehaviour
     }
 
     // 액션 갱신
-    protected virtual void UpdateAction()
+    protected virtual IEnumerator UpdateAction()
     {
-        if (currentAction) return;
-
-        ActionTarget = UpdateActionTarget();
-
-        // 수행 중인 행동이 없다면 다음 행동 결정
-        Action nextAction = ChooseAction();
-        if (nextAction != null)
+        while(IsAlive())
         {
-            StartAction(nextAction);
-        }
-        else
-        {
-            // 수행 할 액션을 찾지 못했다면 대기
-            Invoke("UpdateAction", actionDelay);
-        }
+            // 새로운 턴 시작.
+            // 액션 대상 탐색
+            ActionTarget = FindActionTarget();
+
+            // 수행 중인 행동이 없다면 다음 행동 결정
+            Action nextAction = ChooseAction();
+            if (nextAction != null)
+            {
+                StartAction(nextAction);
+                yield return new WaitUntil(() => (currentAction == null));
+            }
+            
+            yield return new WaitForSeconds(actionDelay);
+        } 
+
+        yield break;
     }
 
-    protected virtual GameObject UpdateActionTarget()
+    protected virtual GameObject FindActionTarget()
     {
-        // 사정거리 판단
+        // 행동 대상 우선 순위
+        // #1. 전투
+        // 사정거리 판단?
         // 현재는 겹쳐진 타일 위의 유닛
         List<GameObject> list = gameManager.GetUnitsOnTile(TileIndex);
 
@@ -167,7 +172,7 @@ public class Unit : MonoBehaviour
 
     public void StartAction(Action action)
     {
-        // Debug.Log("[StartAction] " + action);
+        Debug.Log("[StartAction] " + action);
 
         currentAction = action;
 
@@ -188,26 +193,25 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        // Debug.Log("[EndAction] " + action);
+        Debug.Log("[EndAction] " + action);
 
         // 이벤트 핸들러 연결 해제
         currentAction.OnActionBeginPlay -= actionBeginHandler;
         currentAction.OnActionEndPlay -= actionEndHandler;
 
-        Action prev = currentAction;
+        OnActionFinished();
+
+        // 코루틴 관리를 위해 마지막에..
         currentAction = null;
-
-        OnActionFinished(prev);
-
-        // 유닛이 여전히 활성 상태라면 다음 액션을 갱신합니다.
-        if (IsActivated)
-        {
-            Invoke("UpdateAction", actionDelay);
-        }
     }
 
     protected virtual void OnActionStarted() { }
-    protected virtual void OnActionFinished(Action prev) { }
+    protected virtual void OnActionFinished() { }
+
+    protected virtual bool IsActionPlaying()
+    {
+        return (currentAction != null);
+    }
 
     public void NotifyActionBeginPlay(Action action)
     {
@@ -247,6 +251,7 @@ public class Unit : MonoBehaviour
         Debug.Log("[TakeDamage " + gameObject + "] " + amount + " by " + instigator + " : " + currentHP + " / " + HP);
     }
 
+    // 사망 선고도 GameManager 에게 받아야 함
     public void Death()
     {
         currentHP = 0;
