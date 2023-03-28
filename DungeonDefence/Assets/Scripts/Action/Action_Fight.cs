@@ -76,7 +76,10 @@ public class Action_Fight : Action
             // 공격 딜레이를 버프 등의 이유로 실시간 조절하려면 달라져야 할 수도.
             yield return new WaitForSeconds(1.0f / owner.AttackSpeed);
 
-            gameManager.NotifyHit(owner, target);
+            DamageData damage = new DamageData(owner);
+            damage.physical = owner.Power;
+
+            gameManager.NotifyHit(target, damage);
 
             // 공격 후 둘 중 누군가 죽었다면 종료
             if (owner.IsAlive() == false || target.IsAlive() == false)

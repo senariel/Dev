@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class GameManager : MonoBehaviour
 {
     [System.Serializable]
@@ -155,10 +156,10 @@ public class GameManager : MonoBehaviour
         return unitInstance;
     }
 
-    public void NotifyHit(Unit instigator, Unit victim)
+    public void NotifyHit(Unit target, DamageData damage)
     {
         // 계산은 일단 단순하게
-        victim.TakeDamage(instigator.gameObject, instigator.Power - victim.Armor);
+        target.TakeDamage(damage.instigator, damage.ApplyTo(target));
     }
 
     public void NotifyDead(Unit unit)

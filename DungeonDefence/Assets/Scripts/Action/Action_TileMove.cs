@@ -115,12 +115,12 @@ public class Action_TileMove : Action
         
         navAgent.ResetPath();
 
-        Finish();
-
-        Tile tile = tileManager.GetTile(owner.TileIndex);
+        Tile tile = tileManager.GetTile(targetTileIndex);
         if (tile)
         {
             tile.Enter(owner);
         }
+
+        Finish();
     }
 }
