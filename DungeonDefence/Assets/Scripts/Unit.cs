@@ -172,7 +172,7 @@ public class Unit : MonoBehaviour
 
     public void StartAction(Action action)
     {
-        Debug.Log("[StartAction] " + action);
+        // Debug.Log("[StartAction] " + action);
 
         currentAction = action;
 
@@ -193,7 +193,7 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        Debug.Log("[EndAction] " + action);
+        // Debug.Log("[EndAction] " + action);
 
         // 이벤트 핸들러 연결 해제
         currentAction.OnActionBeginPlay -= actionBeginHandler;
