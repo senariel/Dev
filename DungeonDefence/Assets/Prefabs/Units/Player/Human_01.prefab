@@ -102,8 +102,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96d78a690b373c44ab0b0bf80df0ded0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ActionList: []
   autoActivate: 0
-  HP: 1
   Power: 3
   Armor: 1
   AttackSpeed: 1

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     // 카드 드로우로 생성할 유닛의 프리팹
     public GameObject unitPrefab;

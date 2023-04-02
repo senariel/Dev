@@ -57,5 +57,6 @@ public class Tile : MonoBehaviour
         }
     }
 
+    public virtual bool CanEnter(Unit unit) { return true; }
     public virtual void Enter(Unit unit)  {}
 }

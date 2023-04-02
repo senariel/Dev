@@ -21,32 +21,23 @@ public class TileManager : MonoBehaviour
     [SerializeField, HideInInspector] protected Tile startTile = null;
     [SerializeField, HideInInspector] protected Tile finishTile = null;
 
-    protected GameManager gameManager = null;
-    private bool isReady = false;
+    public bool IsReady {get; private set;}
 
     void Awake()
     {
+        // 스테이지 게임오브젝트가 없다면 작동 불가
         if (!stage)
             return;
 
-        GameObject gm = GameObject.Find("GameManager");
-        if (!gm)
-            return;
-
-        gameManager = gm.GetComponent<GameManager>();
-        if (gameManager)
-        {
-            gameManager.TileManager = this;
-        }
-
+        // 바닥 타일 생성/배치
         if (GenerateFloorTiles() == false)
             return;
 
-        // 최초 타일 생성/배치
+        // 상단 타일 생성/배치
         if (GenerateTiles() == false)
             return;
 
-        isReady = true;
+        IsReady = true;
     }
 
     // Start is called before the first frame update
@@ -64,7 +55,7 @@ public class TileManager : MonoBehaviour
     // 타일이 정상 설치되었는지 확인
     public bool IsGameStartable()
     {
-        return isReady;
+        return IsReady;
     }
 
     // 시작 타일 반환
@@ -363,11 +354,11 @@ public class TileManager : MonoBehaviour
         yield break;
     }
 
-    // 타일로 이동 할 수 있는지 여부
-    // tileIndex : 현재 유닛의 위치 인덱스
+    // 주변 타일 찾기
+    // tileIndex : 현재 위치 인덱스
     // dir : 이동하고자 하는 방향
     // unit : 이동하고자 하는 유닛
-    public int CheckMovableTile(int tileIndex, Vector3 dir, Unit unit)
+    public int GetTileIndexAround(int tileIndex, Vector3 dir)
     {
         int nextIndex = -1;
         if ((dir - Vector3.forward).sqrMagnitude <= 0.01f)
@@ -390,16 +381,6 @@ public class TileManager : MonoBehaviour
         // 범위를 벗어난 인덱스
         if (nextIndex < 0 || nextIndex >= (tileCount.x * tileCount.y))
             return -1;
-
-        // 방해 블럭 타일 판단
-        Tile tile = GetTile(nextIndex);
-        if (tile)
-        {
-            if (LayerMask.LayerToName(tile.gameObject.layer) == "Tile_Block")
-            {
-                return -1;
-            }
-        }
 
         return nextIndex;
     }

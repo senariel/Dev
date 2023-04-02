@@ -1,34 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using DDGame;
 
 public class GameManager : MonoBehaviour
 {
     [System.Serializable]
     public struct WaveSpawnData
     {
-        public float delay;
-        public List<GameObject> unitPrefabList;
+        public float Delay;
+        public List<UnitData> UnitSquad;
     }
 
-    // 플레이어의 방어 유닛 카드?
-    public GameObject bossUnit;
-    public List<WaveSpawnData> waveList = new();
+    //----- Serialize Fields begin
+    // 현 스테이지의 보스 정보.
+    // 추후엔 인벤토리에서 올 수 있음.
+    public UnitData stageBoss;
+    public List<WaveSpawnData> waveList;
     // 웨이브 간 대기 시간
     public float waveDelay;
+    //----- Serialize Fields end
 
-    public GameManager(TileManager tileManager, Inventory inventory)
-    {
-        this.TileManager = tileManager;
-        this.Inventory = inventory;
+    //----- Manager begin
+    public TileManager TileManager { get; private set; }
+    public Inventory Inventory { get; private set; }
+    //----- Manager end
 
-    }
-    public TileManager TileManager { get; set; }
-    public Inventory Inventory { get; set; }
-
-    protected List<GameObject> unitList;
+    //----- Cached Object begin
+    // 생성된 유닛 목록
+    protected List<Unit> unitList = new();
+    // 생성된 보스 유닛
     protected Unit bossInstance = null;
+    //----- Cached OBject end
+
+    //----- Event Handler begin
+    public event StageStateChangeEventHandler StateChangeEvent;
+    //----- Event Handler end
+
+
+    // 스테이지 진행 상태
+    public EStageState State { get; set; }
+    // 상태별 대기 시간. 0은 무제한
+    public int[] stateWaitTime = new int[System.Enum.GetValues(typeof(EStageState)).Length];
+
     // 현재 웨이브 인덱스
     protected int currentWaveIndex = -1;
 
@@ -37,6 +51,10 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Debug.Log("[GameManager : Awake]");
+
+        State = DDGame.EStageState.None;
+        
+        TileManager = GetComponentInChildren<TileManager>();
     }
 
     void Start()
@@ -44,7 +62,8 @@ public class GameManager : MonoBehaviour
         if (IsGameStartable() == false)
             return;
 
-        StartStage();
+        // 준비 상태로 변경
+        SetState(DDGame.EStageState.Fortify);
     }
 
     // Update is called once per frame
@@ -53,18 +72,45 @@ public class GameManager : MonoBehaviour
 
     }
 
-    // 스테이지 시작
-    public void StartStage()
+    // 스테이지 상태 변화
+    public void SetState(DDGame.EStageState newState)
     {
-        Debug.Log("[StartGame]");
-        
-        unitList = new();
+        State = newState;
 
-        // 초기 플레이어 유닛 생성
-        SpawnPlayerUnits();
+        // 이벤트 전파
+        // OnStateChanged() 는 코루틴으로 동작하기 때문에 전달을 먼저 한다. 
+        StateChangeEvent?.Invoke(State);
 
-        // 웨이브 시작
-        StartCoroutine(StartWave());
+        // 상태 변화 처리
+        StartCoroutine(OnStateChanged(State));
+    }
+
+    // 상태별 대기
+    protected IEnumerator OnStateChanged(EStageState state)
+    {
+        // 대기 시간이 종료되면
+        // 다음 상태로 넘어간다.
+        switch (state)
+        {
+            case EStageState.Fortify:
+                // 초기 플레이어 유닛 생성
+                SpawnPlayerUnits();
+                break;
+
+            case EStageState.Invade:
+                // 웨이브 시작
+                yield return StartWave();
+                break;
+        }
+
+        // 완료 후 대기 시간동안 대기
+        float waitTime = stateWaitTime[(int)State];
+        if (waitTime > 0.0f)
+        {
+            yield return new WaitForSeconds(waitTime);
+        }
+
+        yield break;
     }
 
     // 게임 시작 가능 여부
@@ -83,14 +129,12 @@ public class GameManager : MonoBehaviour
     // 플레이어의 기본 유닛 생성
     protected void SpawnPlayerUnits()
     {
+        // 최종 경비
         Tile finishTile = TileManager.GetFinishTile();
-        if (finishTile && bossUnit)
+        if (finishTile && stageBoss && stageBoss.Prefab)
         {
-            GameObject unit = SpawnUnitOnTile(bossUnit, finishTile.TileIndex, 0);
-            if (unit)
-            {
-                bossInstance = unit.GetComponent<Unit>();
-            }
+            bossInstance = SpawnUnitOnTile(stageBoss, finishTile.TileIndex, ETeamID.Defence);
+            bossInstance.Activate();
         }
     }
 
@@ -110,91 +154,99 @@ public class GameManager : MonoBehaviour
     {
         Tile startTile = TileManager.GetStartTile();
 
-        foreach (GameObject unitPrefab in waveData.unitPrefabList)
+        foreach (UnitData unitData in waveData.UnitSquad)
         {
-            if (unitPrefab != null)
+            if (unitData != null)
             {
-                SpawnUnitOnTile(unitPrefab, startTile.TileIndex);
+                SpawnUnitOnTile(unitData, startTile.TileIndex, ETeamID.Offence);
             }
 
-            yield return new WaitForSeconds(waveData.delay);
+            yield return new WaitForSeconds(waveData.Delay);
         }
     }
 
-    // 바닥 타일임에 주의
-    public GameObject SpawnUnitOnTile(GameObject unitPrefab, int tileIndex, int teamID = -1, GameObject unitInstance = null)
+    // 타일 위치에 유닛 생성하기
+    public Unit SpawnUnitOnTile(UnitData unitData, int tileIndex, ETeamID teamID)
     {
+        if (!unitData || !unitData.Prefab) return null;
+
         // 유닛 생성
-        Tile tile = TileManager.GetTile(tileIndex);
-        Vector3 spawnPosition = TileManager.GetTilePosition(tileIndex, true);
-        spawnPosition.y += (unitPrefab.GetComponent<CapsuleCollider>().height * 0.5f);
+        GameObject unitInstance = GameObject.Instantiate<GameObject>(unitData.Prefab);
+        if (!unitInstance) return null;
 
-        if (unitInstance == null)
+        Unit unit = unitInstance.GetComponent<Unit>();
+        if (unit)
         {
-            unitInstance = GameObject.Instantiate<GameObject>(unitPrefab);
+            unitList.Add(unit);            
+
+            // 팀 인덱스
+            unit.TeamID = teamID;
+
+            // 배치
+            PlaceUnitOnTile(unit, tileIndex);
         }
 
-        if (unitInstance)
-        {
-            // 유닛 생성 및 진행 방향 확인
-            Quaternion spawnRotation = (teamID == 0) ? TileManager.GetFinishTile().transform.rotation : TileManager.GetStartTile().transform.rotation;
-            unitInstance.transform.position = spawnPosition;
-            unitInstance.transform.rotation = spawnRotation;
-
-            Unit script = unitInstance.GetComponent<Unit>();
-            if (script)
-            {
-                unitList.Add(unitInstance);
-
-                script.TeamID = (teamID == -1) ? unitPrefab.GetComponent<Unit>().TeamID : teamID;
-                script.TileIndex = tileIndex;
-                script.Direction = unitInstance.transform.forward;
-                script.Activate();
-            }
-        }
-
-        return unitInstance;
+        return unit;
     }
 
+    // 타일 위치로 유닛 배치하기
+    public void PlaceUnitOnTile(Unit target, int tileIndex)
+    {
+        // 유닛 배치
+        Vector3 spawnPosition = TileManager.GetTilePosition(tileIndex, true);
+        // spawnPosition.y += (target.Prefab.GetComponent<CapsuleCollider>().height * 0.5f);
+
+        // 유닛 생성 및 진행 방향 확인
+        Quaternion spawnRotation = (target.TeamID == 0) ? 
+            TileManager.GetFinishTile().transform.rotation : 
+            TileManager.GetStartTile().transform.rotation;
+
+        target.TileIndex = tileIndex;
+        target.transform.SetPositionAndRotation( spawnPosition,  spawnRotation);
+    }
+
+    // 타격 보고
     public void NotifyHit(Unit target, DamageData damage)
     {
+        // 검증 단계 필요
+
         // 계산은 일단 단순하게
         target.TakeDamage(damage.instigator, damage.ApplyTo(target));
     }
 
+    // 사망보고
     public void NotifyDead(Unit unit)
     {
         if (unit)
         {
-            unitList.Remove(unit.gameObject);
+            unitList.Remove(unit);
+            unit.Death();
 
             if (unit == bossInstance)
             {
-                Debug.Log("Game Over");
+                SetState(EStageState.End);
             }
-
-            unit.Death();
         }
     }
 
-    // 유닛이 목적지에 도착함
+    // 유닛이 최종 목적지에 도착함
     public void UnitReachedFinish(Unit enemy)
     {
-        Destroy(enemy.gameObject);
+        // Destroy(enemy.gameObject);
     }
 
-    public List<GameObject> GetUnitsOnTile(int tileIndex)
+    // 특정 타일 위에 있는 유닛
+    public List<Unit> GetUnitsOnTile(int tileIndex)
     {
-        List<GameObject> list = new();
+        List<Unit> list = new();
 
-        foreach (GameObject obj in unitList)
+        foreach (Unit unit in unitList)
         {
-            Unit unit = obj.GetComponent<Unit>();
             if (!unit) continue;
 
             if (unit.TileIndex == tileIndex)
             {
-                list.Add(obj);
+                list.Add(unit);
             }
         }
 

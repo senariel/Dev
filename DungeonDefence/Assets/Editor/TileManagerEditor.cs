@@ -59,11 +59,13 @@ public class TileManagerEditor : Editor
         if (GUILayout.Button("Reset Tiles"))
         {
             script.ResetTiles();
+            EditorUtility.SetDirty(script.stage);
         }
         if (GUILayout.Button("Reset All Tiles"))
         {
             script.ResetFloorTiles();
             script.ResetTiles();
+            EditorUtility.SetDirty(script.stage);
         }
         if (GUILayout.Button("Generate Tiles"))
         {
@@ -72,6 +74,8 @@ public class TileManagerEditor : Editor
 
             // 타일 갱신
             script.GenerateTiles();
+            
+            EditorUtility.SetDirty(script.stage);
         }
         EditorGUILayout.EndHorizontal();
     }

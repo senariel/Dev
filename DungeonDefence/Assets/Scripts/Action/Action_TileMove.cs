@@ -1,14 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent)), DisallowMultipleComponent]
 public class Action_TileMove : Action
 {
-    protected UnityEngine.AI.NavMeshAgent navAgent = null;
-    protected Animator animator = null;
-
+    protected NavMeshAgent navAgent = null;
     protected TileManager tileManager = null;
-    // 목표 타일 인덱스
     protected int targetTileIndex = -1;
 
 
@@ -16,11 +15,8 @@ public class Action_TileMove : Action
     {
         base.Awake();
 
-        navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        animator = GetComponentInChildren<Animator>();
-
-        GameManager gm = GameObject.Find("GameManager").GetComponent<GameManager>();
-        tileManager = gm?.TileManager;
+        navAgent = GetComponentInChildren<NavMeshAgent>();
+        tileManager = GameManager?.TileManager;
     }
 
     // Start is called before the first frame update
@@ -34,72 +30,111 @@ public class Action_TileMove : Action
     {
         base.Update();
 
-        if (!isPlaying) return;
+        if (!IsPlaying) return;
 
-        // 애니메이션 연출
-        if (animator)
+        // 현재 이동 중이라면
+        if (!navAgent.pathPending && navAgent.hasPath)
         {
-            animator.SetFloat("Speed", navAgent.velocity.magnitude);
-        }
+            // 애니메이션 연출
+            if (animator)
+            {
+                animator.SetFloat("Speed", navAgent.velocity.magnitude);
+            }
 
-        // 도착 여부
-        // 경로 계산 중이라면 이동 중인 것으로 판단
-        if (!navAgent.pathPending && (navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
-        {
-            OnMoveFinished();
+            // 도착 여부
+            if ((navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
+            {
+                OnMoveFinished();
+            }
         }
     }
 
+    // 작동 가능 여부
     public override bool CanPlay(Unit unit)
     {
-        if (base.CanPlay(unit) && tileManager && navAgent && owner.ActionTarget == null)
-        {
-            return true;
-        }
+        // 기본 체크
+        if (base.CanPlay(unit) == false || !tileManager || !navAgent)
+            return false;
 
-        return false;
+        // 타일 위치 확인
+        int tileIndex = FindNextTile(unit.TileIndex, unit.Direction);
+        if (tileIndex == -1)
+            return false;
+
+        // 유효 타일 확인
+        Tile tile = tileManager.GetTile(tileIndex);
+        if (tile && tile.CanEnter(unit) == false)
+            return false;
+
+        return true;
     }
 
     protected override void OnBeginPlay()
     {
         base.OnBeginPlay();
 
-        targetTileIndex = -1;
-
-        MoveToNextTile();
+        // 다음 목표 타일 갱신
+        targetTileIndex = FindNextTile(owner.TileIndex, owner.Direction);
+        if (targetTileIndex != -1)
+        {
+            // 이동
+            MoveToTile(targetTileIndex);
+        }
+        else
+        {
+            Finish();
+        }
     }
 
-    // 다음 타일로 이동
-    void MoveToNextTile()
+    // 다음 이동 타일 검색
+    // tileIndex : 현재 타일 위치
+    // direction : 현재 진행 방향
+    // return : Tile Index
+    protected int FindNextTile(int tileIndex, Vector3 direction)
     {
-        // 다음 타일 인덱스 찾기
         // step #1. 오른쪽 확인
-        Vector3 dir = Quaternion.AngleAxis(90.0f, Vector3.up) * owner.Direction;
-        targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-        if (targetTileIndex == -1)
+        Vector3 dir = Quaternion.AngleAxis(90.0f, Vector3.up) * direction;
+        int index = FindMovableTileAround(tileIndex, dir, owner);
+        if (index == -1)
         {
             // step #2. 정면 확인
-            dir = owner.Direction;
-            targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-            if (targetTileIndex == -1)
+            dir = direction;
+            index = FindMovableTileAround(tileIndex, dir, owner);
+            if (index == -1)
             {
                 // step #3. 왼쪽 확인
-                dir = Quaternion.AngleAxis(-90.0f, Vector3.up) * owner.Direction;
-                targetTileIndex = tileManager.CheckMovableTile(owner.TileIndex, dir, owner);
-                if (targetTileIndex == -1)
-                {
-                    Debug.Log("Failed to find next tile!");
-
-                    return;
-                }
+                dir = Quaternion.AngleAxis(-90.0f, Vector3.up) * direction;
+                index = FindMovableTileAround(tileIndex, dir, owner);
             }
         }
 
-        // 방향 갱신
-        owner.Direction = dir;
+        return index;
+    }
 
-        Vector3 nextPosition = tileManager.GetTilePosition(targetTileIndex, true);
-        nextPosition.y += (owner.GetComponent<CapsuleCollider>().height * 0.5f);
+    // 이동 가능한 주변 타일 검색
+    protected int FindMovableTileAround(int index, Vector3 dir, Unit unit)
+    {
+        int found = tileManager.GetTileIndexAround(index, dir);
+        Tile tile = tileManager.GetTile(index);
+        if (tile && tile.CanEnter(unit) == false)
+        {
+            return -1;
+        }
+
+        return found;
+    }
+
+    // 다음 타일로 이동
+    void MoveToTile(int tileIndex)
+    {
+        Vector3 nextPosition = tileManager.GetTilePosition(tileIndex, true);
+        // nextPosition.y += (owner.GetComponent<CapsuleCollider>().height * 0.5f);
+
+        // 위치/방향 갱신
+        owner.TileIndex = tileIndex;
+        owner.Direction = (nextPosition - tileManager.GetTilePosition(owner.TileIndex, true)).normalized;
+
+        Debug.Log("[Action TileMove] " + nextPosition + " / " + owner.Direction);
 
         if (navAgent.SetDestination(nextPosition) == false)
         {
@@ -110,16 +145,12 @@ public class Action_TileMove : Action
     // 이동 완료 처리
     protected void OnMoveFinished()
     {
-        // 도착하였으므로 위치를 갱신한다.
-        owner.TileIndex = targetTileIndex;
-        
         navAgent.ResetPath();
 
-        Tile tile = tileManager.GetTile(targetTileIndex);
-        if (tile)
-        {
-            tile.Enter(owner);
-        }
+        owner.TileIndex = targetTileIndex;
+
+        Tile tile = tileManager.GetTile(owner.TileIndex);
+        tile?.Enter(owner);
 
         Finish();
     }
