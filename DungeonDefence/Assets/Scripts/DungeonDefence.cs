@@ -21,10 +21,12 @@ namespace DDGame
 
     public enum ETileType
     {
-        Block,
-        Start,
-        Finish,
+        Block,      // 파괴가능한 블럭
+        Start,      // 시작지점
+        Finish,     // 종료지점
     }
 
     public delegate void StageStateChangeEventHandler(EStageState newState);
+
+    public delegate Tile GetTileHandler();
 }

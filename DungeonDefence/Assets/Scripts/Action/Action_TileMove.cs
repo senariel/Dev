@@ -16,6 +16,9 @@ public class Action_TileMove : Action
         base.Awake();
 
         navAgent = GetComponentInChildren<NavMeshAgent>();
+        navAgent.autoBraking = false;
+        navAgent.stoppingDistance = 0.1f;
+
         tileManager = GameManager?.TileManager;
     }
 
@@ -30,22 +33,33 @@ public class Action_TileMove : Action
     {
         base.Update();
 
+        //Debug.Log("[Update #1] " + IsPlaying + " / " + navAgent.pathPending + " / " + navAgent.hasPath);
+
         if (!IsPlaying) return;
 
-        // 현재 이동 중이라면
-        if (!navAgent.pathPending && navAgent.hasPath)
+        // 현재 이동 계산 중이 아니라면
+        if (!navAgent.pathPending)
         {
-            // 애니메이션 연출
-            if (animator)
+            // 이동 중이라면
+            if (navAgent.hasPath)
             {
-                animator.SetFloat("Speed", navAgent.velocity.magnitude);
+                // 애니메이션 연출
+                if (animator)
+                {
+                    animator.SetFloat("Speed", navAgent.velocity.magnitude);
+                }
+            }
+            else
+            {
+                navAgent.velocity = Vector3.zero;
+
+                // 도착 여부
+                // if ((navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
+                {
+                    OnMoveFinished();
+                }
             }
 
-            // 도착 여부
-            if ((navAgent.remainingDistance <= navAgent.stoppingDistance) && (navAgent.velocity.sqrMagnitude == 0.00f))
-            {
-                OnMoveFinished();
-            }
         }
     }
 
@@ -86,6 +100,11 @@ public class Action_TileMove : Action
         }
     }
 
+    public override void OnUnitActiveChanged(bool isActivated)
+    {
+        navAgent.enabled = isActivated;
+    }
+
     // 다음 이동 타일 검색
     // tileIndex : 현재 타일 위치
     // direction : 현재 진행 방향
@@ -115,7 +134,8 @@ public class Action_TileMove : Action
     protected int FindMovableTileAround(int index, Vector3 dir, Unit unit)
     {
         int found = tileManager.GetTileIndexAround(index, dir);
-        Tile tile = tileManager.GetTile(index);
+        Tile tile = tileManager.GetTile(found);
+
         if (tile && tile.CanEnter(unit) == false)
         {
             return -1;
@@ -127,14 +147,15 @@ public class Action_TileMove : Action
     // 다음 타일로 이동
     void MoveToTile(int tileIndex)
     {
+        Vector3 curPosition = tileManager.GetTilePosition(owner.TileIndex, true);
         Vector3 nextPosition = tileManager.GetTilePosition(tileIndex, true);
         // nextPosition.y += (owner.GetComponent<CapsuleCollider>().height * 0.5f);
 
         // 위치/방향 갱신
         owner.TileIndex = tileIndex;
-        owner.Direction = (nextPosition - tileManager.GetTilePosition(owner.TileIndex, true)).normalized;
+        owner.Direction = (nextPosition - curPosition).normalized;
 
-        Debug.Log("[Action TileMove] " + nextPosition + " / " + owner.Direction);
+        // Debug.Log("[MoveToTile] " + owner.TileIndex + " / " + owner.Direction);
 
         if (navAgent.SetDestination(nextPosition) == false)
         {
@@ -145,11 +166,17 @@ public class Action_TileMove : Action
     // 이동 완료 처리
     protected void OnMoveFinished()
     {
+        // Debug.Log("OnMoveFinished");
+
         navAgent.ResetPath();
+
+        // 애니메이션 멈춤
+        animator.SetFloat("Speed", 0.0f);
 
         owner.TileIndex = targetTileIndex;
 
         Tile tile = tileManager.GetTile(owner.TileIndex);
+
         tile?.Enter(owner);
 
         Finish();

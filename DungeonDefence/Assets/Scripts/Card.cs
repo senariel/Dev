@@ -2,22 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
+    public GameObject ImageObject;
+
     // 카드 드로우로 생성할 유닛의 프리팹
-    public GameObject unitPrefab;
+    public UnitData UnitData { get; private set; }
 
     protected RectTransform rectTransform;
 
     // 생성된 유닛. 임시
-    protected GameObject unitInstance = null;
+    protected Unit unitInstance = null;
     protected GameManager gameManager = null;
+    protected Image image;
 
     void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+        
+        image = ImageObject?.GetComponent<Image>();
     }
 
     // Start is called before the first frame update
@@ -32,6 +38,13 @@ public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragH
 
     }
 
+    public void SetUnitData(UnitData unitData)
+    {
+        UnitData = unitData;
+
+        image.sprite = UnitData.CardImage;
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
         Debug.Log("OnClick : " + gameObject);
@@ -39,13 +52,13 @@ public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragH
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        Debug.Log("OnBeginDrag " + UnitData);
+
         // 연출
         rectTransform.anchoredPosition += new Vector2(0.0f, 50.0f);
 
-        unitInstance = Instantiate(unitPrefab);
-        unitInstance.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-        unitInstance.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
-        
+        unitInstance = gameManager.SpawnUnitOnTile(UnitData, -1, DDGame.ETeamID.Defence);
+
         UpdateUnitPosition(unitInstance, eventData.position);
     }
 
@@ -57,10 +70,7 @@ public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragH
         Tile tile = GetTileAtPoint(eventData.position);
         if (tile)
         {
-            unitInstance.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-            unitInstance.GetComponent<Rigidbody>().constraints = unitPrefab.GetComponent<Rigidbody>().constraints;
-
-            gameManager.SpawnUnitOnTile(unitPrefab, tile.TileIndex, 0, unitInstance);
+            gameManager.PlaceUnitOnTile(unitInstance, tile.TileIndex);
 
             unitInstance = null;
             Destroy(gameObject);
@@ -77,10 +87,10 @@ public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragH
         UpdateUnitPosition(unitInstance, eventData.position);
     }
 
-    protected bool UpdateUnitPosition(GameObject unit, Vector2 screenPoint)
+    protected bool UpdateUnitPosition(Unit unit, Vector2 screenPoint)
     {
         if (!unit) return false;
-        
+
         // 유닛은 통과해서 레이캐스트
         Ray ray = Camera.main.ScreenPointToRay(screenPoint);
         RaycastHit hitInfo;
@@ -97,7 +107,7 @@ public class Card : ScriptableObject, IBeginDragHandler, IEndDragHandler, IDragH
                 return true;
             }
         }
-        
+
         unit.transform.position = ray.origin + (ray.direction * 10.0f);
 
         return false;

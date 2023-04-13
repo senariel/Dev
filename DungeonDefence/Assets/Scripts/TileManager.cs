@@ -6,22 +6,25 @@ public class TileManager : MonoBehaviour
 {
     [HideInInspector] public Vector2Int tileCount;
     [HideInInspector] public Vector3 tileSize;
-    [HideInInspector] public GameObject[] tilePrefabs = new GameObject[0];
+    [HideInInspector] public TileData[] Tilemap_Bottom = new TileData[0];
+    [HideInInspector] public TileData[] Tilemap_Upper = new TileData[0];
 
     // 타일이 설치 될 게임 오브젝트
     public GameObject stage = null;
 
-    // 최하단 타일(파괴 불가, 걷기용)
-    public GameObject floorTilePrefab = null;
+    // 공격 유닛 방향
+    public Vector3 OffenceDirection;
+    // 방어 유닛 방향
+    public Vector3 DefenceDirection;
 
-    [SerializeField, HideInInspector] protected GameObject floorTileContainer = null;
-    [SerializeField, HideInInspector] protected GameObject[] floorTiles = new GameObject[0];
-    [SerializeField, HideInInspector] protected GameObject tileContainer = null;
-    [SerializeField, HideInInspector] protected GameObject[] tiles = new GameObject[0];
+    [SerializeField, HideInInspector] protected GameObject tileContainer_Bottom = null;
+    [SerializeField, HideInInspector] protected GameObject tileContainer_Upper = null;
+    [SerializeField, HideInInspector] protected Tile[] tiles_Bottom = new Tile[0];
+    [SerializeField, HideInInspector] protected Tile[] tiles_Upper = new Tile[0];
     [SerializeField, HideInInspector] protected Tile startTile = null;
     [SerializeField, HideInInspector] protected Tile finishTile = null;
 
-    public bool IsReady {get; private set;}
+    public bool IsReady { get; private set; }
 
     void Awake()
     {
@@ -30,11 +33,11 @@ public class TileManager : MonoBehaviour
             return;
 
         // 바닥 타일 생성/배치
-        if (GenerateFloorTiles() == false)
+        if (GenerateBottomTiles() == false)
             return;
 
         // 상단 타일 생성/배치
-        if (GenerateTiles() == false)
+        if (GenerateUpperTiles() == false)
             return;
 
         IsReady = true;
@@ -72,159 +75,110 @@ public class TileManager : MonoBehaviour
 
     public void ResetFloorTiles()
     {
-        if (floorTileContainer)
+        if (tileContainer_Bottom)
         {
-            DestroyImmediate(floorTileContainer);
-            floorTileContainer = null;
+            DestroyImmediate(tileContainer_Bottom);
+            tileContainer_Bottom = null;
         }
     }
 
     public void ResetTiles()
     {
-        if (tileContainer)
+        if (tileContainer_Upper)
         {
-            DestroyImmediate(tileContainer);
-            tileContainer = null;
+            DestroyImmediate(tileContainer_Upper);
+            tileContainer_Upper = null;
         }
     }
 
-    // 바닥 타일 갱신
-    public bool GenerateFloorTiles()
+    // 바닥 타일 생성
+    public bool GenerateBottomTiles()
     {
-        if (floorTilePrefab == null)
-            return false;
-
         // 컨테이너 생성
-        if (floorTileContainer == null)
+        if (tileContainer_Bottom == null)
         {
             // 검색 우선
             Transform tf = stage.transform.Find("Bottom");
             if (tf != null)
             {
-                Debug.Log("[TileManager : UpdateFloorTiles] container is null but i found : " + floorTilePrefab);
-                floorTileContainer = tf.gameObject;
+                tileContainer_Bottom = tf.gameObject;
             }
             else
             {
-                floorTileContainer = new("Bottom");
+                tileContainer_Bottom = new("Bottom");
             }
 
-            if (floorTileContainer == null)
+            if (tileContainer_Bottom == null)
                 return false;
 
             // 연결
-            floorTileContainer.transform.SetParent(stage.transform);
-            floorTileContainer.layer = LayerMask.NameToLayer("Tile_Bottom");
+            tileContainer_Bottom.transform.SetParent(stage.transform);
+            tileContainer_Bottom.layer = LayerMask.NameToLayer("Tile_Bottom");
         }
-        floorTileContainer.transform.position = new Vector3(0.0f, tileSize.y / -2.0f, 0.0f);
+        // pivot 이 바닥 가운데 인 것이 기준이므로 바닥이 될 타일은 0 점 아래로 깔려야 합니다.
+        tileContainer_Bottom.transform.position = new Vector3(0.0f, -tileSize.y, 0.0f);
 
-        // 타일 전체 갯수
-        int tileTotal = tileCount.x * tileCount.y;
-
-        // 초과 타일 제거
-        if (floorTiles.Length > tileTotal)
-        {
-            for (int i = tileTotal - 1; i < floorTiles.Length; ++i)
-            {
-                if (floorTiles[i])
-                {
-                    floorTiles[i].transform.SetParent(null);
-                    DestroyImmediate(floorTiles[i]);
-                    floorTiles[i] = null;
-                }
-            }
-        }
-
-        System.Array.Resize(ref floorTiles, tileTotal);
-
-        // 타일 생성/이동
-        // 기본 크기 계산
-        BoxCollider tileCollider = floorTilePrefab.GetComponent<BoxCollider>();
-        Vector3 baseScale = tileCollider ? new(
-                            tileSize.x / (tileCollider.size.x / floorTilePrefab.transform.localScale.x),
-                            tileSize.y / (tileCollider.size.y / floorTilePrefab.transform.localScale.y),
-                            tileSize.z / (tileCollider.size.z / floorTilePrefab.transform.localScale.z)) : Vector3.one;
-
-        int index = -1;
-        for (int v = 0; v < tileCount.x; ++v)
-        {
-            for (int h = 0; h < tileCount.y; ++h)
-            {
-                // 타일 인덱스
-                ++index;
-
-                // 타일 생성
-                GameObject tile = floorTiles[index] ? floorTiles[index] : GameObject.Instantiate(floorTilePrefab, floorTileContainer.transform);
-                if (tile != null)
-                {
-                    tile.name = "BottomTile_" + index;
-                    tile.layer = floorTileContainer.layer;       // 레이어 셋팅
-                    tile.transform.SetLocalPositionAndRotation(GetTilePosition(index), floorTilePrefab.transform.rotation);
-                    tile.transform.localScale = baseScale;
-                    tile.isStatic = true;                       // 바닥 타일은 정적으로 고정
-
-                    tile.GetComponent<Tile>().TileIndex = index;
-
-                    floorTiles[index] = tile;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
+        GenerateTileMap(tileContainer_Bottom, ref Tilemap_Bottom, ref tiles_Bottom);
 
         return true;
     }
 
-    // 타일 갱신
-    public bool GenerateTiles()
+    // 상단 타일 생성
+    public bool GenerateUpperTiles()
     {
         // 컨테이너 생성
-        if (tileContainer == null)
+        if (tileContainer_Upper == null)
         {
             // 검색 우선
-            Transform tf = stage.transform.Find("Tiles");
+            Transform tf = stage.transform.Find("Upper");
             if (tf != null)
             {
-                tileContainer = tf.gameObject;
+                tileContainer_Upper = tf.gameObject;
             }
             else
             {
-                tileContainer = new("Tiles");
+                tileContainer_Upper = new("Upper");
             }
 
-            if (tileContainer == null)
+            if (tileContainer_Upper == null)
                 return false;
 
             // 연결
-            tileContainer.transform.SetParent(stage.transform);
-            tileContainer.layer = LayerMask.NameToLayer("Tile_Upper");
+            tileContainer_Upper.transform.SetParent(stage.transform);
+            tileContainer_Upper.layer = LayerMask.NameToLayer("Tile_Upper");
         }
 
-        tileContainer.transform.localPosition = new Vector3(0.0f, tileSize.y / 2.0f, 0.0f);
+        // pivot 이 바닥 가운데 인 것이 기준이므로 상단 타일은 바닥이 0이면 됩니다.
+        tileContainer_Upper.transform.localPosition = Vector3.zero;
 
+        GenerateTileMap(tileContainer_Upper, ref Tilemap_Upper, ref tiles_Upper);
+
+        return true;
+    }
+
+    // 타일 맵 생성
+    protected void GenerateTileMap(GameObject container, ref TileData[] tileMap, ref Tile[] tileList)
+    {
         // 타일 전체 갯수
         int tileTotal = tileCount.x * tileCount.y;
 
-        // 초과 타일 프리팹 제거
-        System.Array.Resize(ref tilePrefabs, tileTotal);
-
-        // 초과 타일 제거
-        if (tiles.Length > tileTotal)
+        // 이전 타일 갱신
+        if (tileList.Length > tileTotal)
         {
-            for (int i = tileTotal - 1; i < tiles.Length; ++i)
+            for (int i = tileTotal - 1; i < tileList.Length; ++i)
             {
-                if (tiles[i])
+                // 제거된 타일이나 초과된 타일 제거
+                if (tileList[i])
                 {
-                    tiles[i].transform.SetParent(null);
-                    DestroyImmediate(tiles[i]);
-                    tiles[i] = null;
+                    tileList[i].transform.SetParent(null);
+                    DestroyImmediate(tileList[i]);
+                    tileList[i] = null;
                 }
             }
         }
-        System.Array.Resize(ref tiles, tileTotal);
+        System.Array.Resize(ref tileList, tileTotal);
 
+        // 타일 생성/이동
         int index = -1;
         for (int v = 0; v < tileCount.x; ++v)
         {
@@ -233,125 +187,53 @@ public class TileManager : MonoBehaviour
                 // 타일 인덱스
                 ++index;
 
-                GameObject tilePrefab = tilePrefabs[index];
-                if (tilePrefab)
+                // 데이터 변경 시 우선 제거
+                if (tileList[index] && (tileMap[index] == null || tileList[index].TileData != tileMap[index]))
                 {
-                    // 타일 생성/이동
-                    // 기본 크기 계산
-                    BoxCollider tileCollider = tilePrefab.GetComponent<BoxCollider>();
-                    Vector3 baseScale = tileCollider ? new(
-                                        tileSize.x / (tileCollider.size.x / tilePrefab.transform.localScale.x),
-                                        tileSize.y / (tileCollider.size.y / tilePrefab.transform.localScale.y),
-                                        tileSize.z / (tileCollider.size.z / tilePrefab.transform.localScale.z)) : Vector3.one;
-
-                    // 타일 생성
-                    GameObject tile = null;
-
-                    // 기존 타일 확인
-                    if (tiles[index])
-                    {
-                        // 다른 타일이라면 기존 타일 제거
-                        if (tilePrefab.CompareTag(tiles[index].tag) == false)
-                        {
-                            DestroyImmediate(tiles[index]);
-                            tiles[index] = null;
-                        }
-                        else
-                        {
-                            tile = tiles[index];
-                        }
-                    }
-
-                    // 타일 생성
-                    if (!tile)
-                    {
-                        tile = GameObject.Instantiate(tilePrefab, tileContainer.transform);
-                    }
-
-                    // 실패
-                    if (!tile)
-                    {
-                        return false;
-                    }
-
-                    Tile tileScript = tile.GetComponent<Tile>();
-                    if (!tileScript)
-                    {
-                        return false;
-                    }
-
-                    // 인덱스 설정
-                    tile.name = "Tile_" + index;
-                    tile.transform.SetLocalPositionAndRotation(GetTilePosition(index), tilePrefab.transform.rotation);
-                    tile.transform.localScale = baseScale;
-                    tile.isStatic = true;   // 타일은 정적으로 고정
-                    tileScript.TileIndex = index;
-
-
-                    // 시작 위치 갱신
-                    if (tile.CompareTag("Tile_Start"))
-                    {
-                        startTile = tile.GetComponent<Tile>();
-                    }
-                    else if (tile.CompareTag("Tile_Finish"))
-                    {
-                        finishTile = tile.GetComponent<Tile>();
-                    }
-                    else
-                    {
-                        // 일반 타일은 파괴 가능
-                        tileScript.breakable = true;
-                    }
-
-                    tiles[index] = tile;
+                    tileList[index].transform.SetParent(null);
+                    DestroyImmediate(tileList[index]);
+                    tileList[index] = null;
                 }
-                else
+
+                // 빈 칸이면 패스
+                if (tileMap[index] == null)
+                    continue;
+
+                // 프리팹 가져오기
+                GameObject tilePrefab = tileMap[index].Prefab;
+
+                // 기본 크기 계산
+                Bounds bounds = tilePrefab ? tilePrefab.GetComponent<MeshRenderer>().localBounds : new Bounds(Vector3.zero, tileSize);
+                Vector3 baseScale = new(tileSize.x / bounds.size.x, tileSize.y / bounds.size.y, tileSize.z / bounds.size.z);
+
+                // 타일 생성
+                Tile tile = tileList[index] ? tileList[index] : tileMap[index].CreateTile(tileSize);
+                if (tile)
                 {
-                    // 빈 타일인데 기존 타일이 있다면 제거
-                    if (tiles[index])
-                    {
-                        DestroyImmediate(tiles[index]);
-                        tiles[index] = null;
-                    }
+                    GameObject tileObj = tile.gameObject;
+                    tileObj.name = "Tile_" + index;
+                    tileObj.layer = tile.TileData.UseCustomLayer ? tile.TileData.CustomLayer : container.layer;            // 레이어 셋팅
+                    tileObj.transform.SetParent(container.transform);
+                    tileObj.transform.localScale = baseScale;
+                    tileObj.transform.SetLocalPositionAndRotation(GetTilePosition(index, false, tileObj), tilePrefab ? tilePrefab.transform.rotation : Quaternion.identity);
+                    tileObj.isStatic = true;                    // 바닥 타일은 정적으로 고정
+
+                    tile.TileIndex = index;
+
+                    tileList[index] = tile;
                 }
             }
         }
-
-        return (startTile && finishTile);
     }
 
     // 타일 파괴하기
-    public void BreakTile(Tile tile)
+    public void NotifyBreakTile(Tile tile)
     {
+        // 바로 파괴
         if (tile)
         {
-            StartCoroutine(PlayBreakTile(tile));
-            Destroy(tile.gameObject);
+            tile.Break();
         }
-    }
-
-    // 타일 파괴 연출
-    private IEnumerator PlayBreakTile(Tile tile)
-    {
-        if (tile && tile.breakFX)
-        {
-            GameObject FXObj = Instantiate(tile.breakFX, tile.transform.position, tile.breakFX.transform.rotation);
-            if (FXObj)
-            {
-                ParticleSystem fx = FXObj.GetComponent<ParticleSystem>();
-                if (fx)
-                {
-                    fx.Play(true);
-
-                    yield return new WaitForSeconds(fx.main.duration);
-
-                    fx.Stop();
-                    Destroy(FXObj);
-                }
-            }
-        }
-
-        yield break;
     }
 
     // 주변 타일 찾기
@@ -387,9 +269,9 @@ public class TileManager : MonoBehaviour
 
     public Tile GetTile(int tileIndex)
     {
-        if (tileIndex > -1 && tiles.Length > tileIndex && tiles[tileIndex] && tiles[tileIndex] != null)
+        if (tileIndex > -1 && tiles_Upper.Length > tileIndex && tiles_Upper[tileIndex] && tiles_Upper[tileIndex] != null)
         {
-            return tiles[tileIndex].GetComponent<Tile>();
+            return tiles_Upper[tileIndex].GetComponent<Tile>();
         }
 
         return null;
@@ -401,11 +283,22 @@ public class TileManager : MonoBehaviour
     // 10 11 12 13 14
     // 05 06 07 08 09
     // 00 01 02 03 04
-    public Vector3 GetTilePosition(int tileIndex, bool isUnitPosition = false)
+    public Vector3 GetTilePosition(int tileIndex, bool isUnitPosition = false, GameObject obj = null)
     {
         float x = ((tileIndex % tileCount.x) * tileSize.x) - (tileSize.x * tileCount.x * 0.5f) + (tileSize.x * 0.5f);
         float z = ((tileIndex / tileCount.y) * tileSize.z) - (tileSize.z * tileCount.y * 0.5f) + (tileSize.z * 0.5f);
 
-        return new Vector3(x, 0.0f, z) + (isUnitPosition ? tileContainer.transform.position : Vector3.zero);
+        Vector3 position = new Vector3(x, 0.0f, z);
+        if (obj && !isUnitPosition)
+        {
+            BoxCollider box = obj.GetComponent<BoxCollider>();
+            position.y = ((box.size.y * 0.5f) - box.center.y) * obj.transform.localScale.y;
+        }
+        else
+        {
+            //position.y += 0.1f;
+        }
+
+        return position;
     }
 }

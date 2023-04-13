@@ -35,13 +35,15 @@ public class GameManager : MonoBehaviour
 
     //----- Event Handler begin
     public event StageStateChangeEventHandler StateChangeEvent;
+    public event GetTileHandler GetStartTileEvent;
+    public event GetTileHandler GetFinishTileEvent;
     //----- Event Handler end
 
 
     // 스테이지 진행 상태
-    public EStageState State { get; set; }
-    // 상태별 대기 시간. 0은 무제한
-    public int[] stateWaitTime = new int[System.Enum.GetValues(typeof(EStageState)).Length];
+    public EStageState GameState { get; set; }
+    // 방어 준비 시간
+    public float FortifyTime;
 
     // 현재 웨이브 인덱스
     protected int currentWaveIndex = -1;
@@ -52,8 +54,8 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[GameManager : Awake]");
 
-        State = DDGame.EStageState.None;
-        
+        GameState = DDGame.EStageState.None;
+
         TileManager = GetComponentInChildren<TileManager>();
     }
 
@@ -75,42 +77,45 @@ public class GameManager : MonoBehaviour
     // 스테이지 상태 변화
     public void SetState(DDGame.EStageState newState)
     {
-        State = newState;
+        GameState = newState;
 
         // 이벤트 전파
         // OnStateChanged() 는 코루틴으로 동작하기 때문에 전달을 먼저 한다. 
-        StateChangeEvent?.Invoke(State);
+        StateChangeEvent?.Invoke(GameState);
 
         // 상태 변화 처리
-        StartCoroutine(OnStateChanged(State));
+        StartCoroutine(UpdateGameState());
     }
 
     // 상태별 대기
-    protected IEnumerator OnStateChanged(EStageState state)
+    protected IEnumerator UpdateGameState()
     {
+        // 일단 다음 프레임에
+        yield return null;
+
         // 대기 시간이 종료되면
         // 다음 상태로 넘어간다.
-        switch (state)
+        switch (GameState)
         {
+            // 준비 상태
             case EStageState.Fortify:
                 // 초기 플레이어 유닛 생성
                 SpawnPlayerUnits();
+                yield return new WaitForSeconds(FortifyTime);
+                // 대기 시간이 지나면 침략 상태로 변경
+                SetState(EStageState.Invade);
                 break;
 
+            // 침략 상태
             case EStageState.Invade:
                 // 웨이브 시작
                 yield return StartWave();
                 break;
-        }
 
-        // 완료 후 대기 시간동안 대기
-        float waitTime = stateWaitTime[(int)State];
-        if (waitTime > 0.0f)
-        {
-            yield return new WaitForSeconds(waitTime);
+            // 종료 상태
+            case EStageState.End:
+                break;
         }
-
-        yield break;
     }
 
     // 게임 시작 가능 여부
@@ -120,8 +125,8 @@ public class GameManager : MonoBehaviour
         if (!TileManager || TileManager.IsGameStartable() == false)
             return false;
 
-        if (!Inventory)
-            return false;
+        // if (!Inventory)
+        //     return false;
 
         return true;
     }
@@ -130,11 +135,11 @@ public class GameManager : MonoBehaviour
     protected void SpawnPlayerUnits()
     {
         // 최종 경비
-        Tile finishTile = TileManager.GetFinishTile();
-        if (finishTile && stageBoss && stageBoss.Prefab)
+        Tile finishTile = GetFinishTile();
+        if (finishTile && stageBoss)
         {
             bossInstance = SpawnUnitOnTile(stageBoss, finishTile.TileIndex, ETeamID.Defence);
-            bossInstance.Activate();
+            bossInstance?.Activate();
         }
     }
 
@@ -152,13 +157,14 @@ public class GameManager : MonoBehaviour
     // 웨이브 생성하기. 코루틴 반복용
     IEnumerator SpawnWave(WaveSpawnData waveData)
     {
-        Tile startTile = TileManager.GetStartTile();
+        Tile startTile = GetStartTile();
 
         foreach (UnitData unitData in waveData.UnitSquad)
         {
             if (unitData != null)
             {
-                SpawnUnitOnTile(unitData, startTile.TileIndex, ETeamID.Offence);
+                Unit unit = SpawnUnitOnTile(unitData, startTile.TileIndex, ETeamID.Offence);
+                unit.Activate();
             }
 
             yield return new WaitForSeconds(waveData.Delay);
@@ -170,20 +176,17 @@ public class GameManager : MonoBehaviour
     {
         if (!unitData || !unitData.Prefab) return null;
 
-        // 유닛 생성
-        GameObject unitInstance = GameObject.Instantiate<GameObject>(unitData.Prefab);
-        if (!unitInstance) return null;
-
-        Unit unit = unitInstance.GetComponent<Unit>();
+        Unit unit = unitData.CreateUnit();
         if (unit)
         {
-            unitList.Add(unit);            
-
             // 팀 인덱스
             unit.TeamID = teamID;
 
             // 배치
-            PlaceUnitOnTile(unit, tileIndex);
+            if (tileIndex > -1)
+            {
+                PlaceUnitOnTile(unit, tileIndex);
+            }
         }
 
         return unit;
@@ -192,17 +195,18 @@ public class GameManager : MonoBehaviour
     // 타일 위치로 유닛 배치하기
     public void PlaceUnitOnTile(Unit target, int tileIndex)
     {
+        target.TileIndex = tileIndex;
+        target.Direction = (target.TeamID == 0) ? TileManager.DefenceDirection : TileManager.OffenceDirection;
+
         // 유닛 배치
         Vector3 spawnPosition = TileManager.GetTilePosition(tileIndex, true);
-        // spawnPosition.y += (target.Prefab.GetComponent<CapsuleCollider>().height * 0.5f);
 
         // 유닛 생성 및 진행 방향 확인
-        Quaternion spawnRotation = (target.TeamID == 0) ? 
-            TileManager.GetFinishTile().transform.rotation : 
-            TileManager.GetStartTile().transform.rotation;
+        Quaternion spawnRotation = Quaternion.LookRotation(target.Direction);
 
-        target.TileIndex = tileIndex;
-        target.transform.SetPositionAndRotation( spawnPosition,  spawnRotation);
+        target.transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+
+        unitList.Add(target);
     }
 
     // 타격 보고
@@ -251,6 +255,16 @@ public class GameManager : MonoBehaviour
         }
 
         return list;
+    }
+
+    protected Tile GetStartTile()
+    {
+        return GetStartTileEvent?.Invoke();
+    }
+
+    protected Tile GetFinishTile()
+    {
+        return GetFinishTileEvent?.Invoke();
     }
 }
 

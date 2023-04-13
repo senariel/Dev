@@ -30,7 +30,7 @@ public class Tile_Trap : Tile
             damage.physical = Damage;
 
             // 타격
-            gameManager.NotifyHit(unit, damage);
+            GameManager.NotifyHit(unit, damage);
 
             StartCoroutine(ReduceDuration(1));
         }

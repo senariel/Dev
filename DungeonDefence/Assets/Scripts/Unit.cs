@@ -5,12 +5,13 @@ using DDGame;
 
 public delegate void UnitActivateEventHandler(bool isActivated);
 
-[DisallowMultipleComponent]
+[DisallowMultipleComponent, RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
 public class Unit : MonoBehaviour
 {
     //----- Status begin
     // 기본 유닛 데이터
-    public UnitData UnitData { get => UnitData; set { Deactivate(); UnitData = value; Activate(); } }
+    protected UnitData unitData;
+    public UnitData UnitData { get => unitData; set { Deactivate(); unitData = value; Activate(); } }
     // 현재 체력
     public int HP { get; private set; }
     // 팀 번호. 플레이어는 0
@@ -36,7 +37,8 @@ public class Unit : MonoBehaviour
 
     // 현재 위치(타일 인덱스)
     public int TileIndex { get; set; }
-    public Vector3 Direction {get => Direction; set {Direction = value.normalized;} }
+    protected Vector3 _direction;
+    public Vector3 Direction {get => _direction; set {_direction = value.normalized;} }
     // 활성화 여부
     public bool IsActivated { get; private set; }
 
@@ -52,11 +54,6 @@ public class Unit : MonoBehaviour
     {
         GameManager = GameObject.Find("GameManager")?.GetComponent<GameManager>();
         TileManager = GameManager.TileManager;
-
-        // TileIndex = -1;
-        // Direction = Vector3.zero;
-        // ActionTarget = null;
-        // currentHP = HP;
 
         actionBeginHandler = new ActionEventHandler(NotifyActionBeginPlay);
         actionEndHandler = new ActionEventHandler(NotifyActionEndPlay);
@@ -81,22 +78,12 @@ public class Unit : MonoBehaviour
 
     void OnDisable()
     {
-        Debug.Log("Disable " + gameObject);
     }
 
     void OnDestroy()
     {
-        Debug.Log("Destroy " + gameObject);
     }
 
-
-    // 유닛 데이터 설정
-    public virtual void OnUnitDataChanged(UnitData prevData, UnitData newData)
-    {
-        // 이름 설정
-        gameObject.name = UnitData.UnitName;
-
-    }
 
     // 유닛 활성화
     public virtual void Activate()
@@ -108,14 +95,7 @@ public class Unit : MonoBehaviour
         // 스탯 설정
         HP = UnitData.HP;
 
-        // 액션 스크립트 생성/등록
-        foreach (Object action in UnitData.Actions)
-        {
-            if (!action) continue;
-
-            // 액션 생성.
-            gameObject.AddComponent(System.Type.GetType(action.name));
-        }
+        GetComponent<Rigidbody>().constraints = UnitData.Prefab.GetComponent<Rigidbody>().constraints;
 
         OnActivated();
 
@@ -129,13 +109,7 @@ public class Unit : MonoBehaviour
 
         IsActivated = false;
 
-        // 이전 액션 제거
-        Action[] prevActions = gameObject.GetComponentsInChildren<Action>(true);
-        foreach (Action action in prevActions)
-        {
-            Debug.Log("destroy child component : " + action);
-            Destroy(action);
-        }
+        GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
 
         OnDeactivated();
     }
@@ -158,10 +132,15 @@ public class Unit : MonoBehaviour
         {
             // 수행 중인 행동이 없다면 다음 행동 결정
             Action nextAction = ChooseAction();
+
             if (nextAction != null)
             {
                 StartAction(nextAction);
                 yield return new WaitUntil(() => (currentAction == null));
+            }
+            else
+            {
+                //Debug.Log("I don't know what should I do. " + gameObject.name);
             }
 
             yield return new WaitForSeconds(actionDelay);
@@ -283,7 +262,7 @@ public class Unit : MonoBehaviour
     // 피격 연출하기
     protected virtual void OnTakeDamage(GameObject instigator, int amount)
     {
-        Debug.Log("[TakeDamage " + gameObject + "] " + amount + " by " + instigator + " : " + HP + " / " + UnitData.HP);
+        // Debug.Log("[TakeDamage " + gameObject + "] " + amount + " by " + instigator + " : " + HP + " / " + UnitData.HP);
     }
 
     // from GameManager

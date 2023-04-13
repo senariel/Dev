@@ -15,14 +15,16 @@ public class Action : MonoBehaviour
     protected Unit owner;
     protected Animator animator;
 
-    public bool IsPlaying = false;
+    public bool IsPlaying { get; set; }
 
     protected virtual void Awake()
     {
         GameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        
+
         owner = GetComponent<Unit>();
         animator = GetComponentInChildren<Animator>();
+
+        IsPlaying = false;
     }
 
     protected virtual void OnEnable()
