@@ -23,3 +23,4 @@ MonoBehaviour:
   TeamID: 0
   Actions:
   - {fileID: 11500000, guid: c9876b89666ee0f46a8b782f36eb561f, type: 3}
+  CardImage: {fileID: 21300000, guid: 0ad3ca2baaacee14999ec5b5d21906fa, type: 3}

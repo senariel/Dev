@@ -863,17 +863,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollView: {fileID: 1810135085}
+  CardPrefab: {fileID: 531339257185412851, guid: ab456c579c507644c96a19962c2a16a1,
+    type: 3}
   myDeck:
-  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
-  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
-  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
-  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
-  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
-  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
-  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
-  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
-  - {fileID: 531339257185412851, guid: 7a5e7ce97faccd74f89cbb6caf2241a1, type: 3}
-  - {fileID: 531339257185412851, guid: 8df5c030b0578ca49a37f49a9edd8620, type: 3}
+  - {fileID: 11400000, guid: f147fe9c166c00a42998a12d544e675c, type: 2}
+  - {fileID: 11400000, guid: f147fe9c166c00a42998a12d544e675c, type: 2}
+  - {fileID: 11400000, guid: f147fe9c166c00a42998a12d544e675c, type: 2}
+  - {fileID: 11400000, guid: f147fe9c166c00a42998a12d544e675c, type: 2}
+  - {fileID: 11400000, guid: f147fe9c166c00a42998a12d544e675c, type: 2}
+  - {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
+  - {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
+  - {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
+  - {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
+  - {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
   dealDelay: 2
   initialDealCards: 5
 --- !u!114 &295851332
