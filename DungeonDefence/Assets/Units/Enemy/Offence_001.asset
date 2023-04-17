@@ -16,11 +16,12 @@ MonoBehaviour:
   Prefab: {fileID: 4099975156170487119, guid: 734d6842ca0824e44bc1ed2a1ad93734, type: 3}
   UnitName: "\uACF5\uACA9_001"
   HP: 5
-  Attack: 1
+  Attack: 2
   Defence: 0
   AttackSpeed: 1
   AttackRange: 1
   TeamID: 1
   Actions:
-  - {fileID: 11500000, guid: 710a068bf0166ae4dbedfdf43784ba49, type: 3}
   - {fileID: 11500000, guid: c9876b89666ee0f46a8b782f36eb561f, type: 3}
+  - {fileID: 11500000, guid: 710a068bf0166ae4dbedfdf43784ba49, type: 3}
+  CardImage: {fileID: 0}

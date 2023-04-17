@@ -35,7 +35,6 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
     // Update is called once per frame
     void Update()
     {
-
     }
 
     public void SetUnitData(UnitData unitData)
@@ -52,12 +51,16 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("OnBeginDrag " + UnitData);
+        // Debug.Log("OnBeginDrag " + UnitData);
 
         // 연출
         rectTransform.anchoredPosition += new Vector2(0.0f, 50.0f);
 
         unitInstance = gameManager.SpawnUnitOnTile(UnitData, -1, DDGame.ETeamID.Defence);
+        if (!unitInstance)
+        {
+            Debug.Log("\tFailed to instantiate unit.");
+        }
 
         UpdateUnitPosition(unitInstance, eventData.position);
     }

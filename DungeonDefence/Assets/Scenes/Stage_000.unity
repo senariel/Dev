@@ -818,6 +818,15 @@ MonoBehaviour:
   - Delay: 1
     UnitSquad:
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+  - Delay: 1
+    UnitSquad:
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
+    - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
   waveDelay: 3
   FortifyTime: 1
 --- !u!114 &295851329
