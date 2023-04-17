@@ -815,12 +815,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageBoss: {fileID: 11400000, guid: aaed6e5b1ca2a344cb1d46f15f84c165, type: 2}
   waveList:
-  - Delay: 1
+  - Delay: 1.5
     UnitSquad:
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
-  - Delay: 1
+  - Delay: 1.5
     UnitSquad:
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
@@ -828,7 +828,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
     - {fileID: 11400000, guid: 709da00d1a87ab24b87aef53eac1efde, type: 2}
   waveDelay: 3
-  FortifyTime: 1
+  FortifyTime: 5
 --- !u!114 &295851329
 MonoBehaviour:
   m_ObjectHideFlags: 0
