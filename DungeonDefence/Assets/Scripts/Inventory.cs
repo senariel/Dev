@@ -5,31 +5,26 @@ using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
+    // 스크롤뷰 컴포넌트
     public GameObject scrollView;
+    // 카드 프리팹
+    public GameObject CardPrefab;
 
     // 플레이어가 보유 중인 카드 목록
-    public List<GameObject> myDeck;
+    public List<UnitData> myDeck;
     // 카드 분배 딜레이
     public float dealDelay = 2.0f;
     // 시작 시 분배받는 카드 갯수
     public int initialDealCards = 5;
 
     protected UnityEngine.UI.ScrollRect rect;
-    protected GameManager gameManager = null;
-    protected List<GameObject> playerDeck = new();
+    public GameManager GameManager {get; private set;}
+    protected List<Card> playerDeck = new();
 
 
     void Awake()
     {
-        GameObject gm = GameObject.Find("GameManager");
-        if (!gm)
-            return;
-
-        gameManager = gm.GetComponent<GameManager>();
-        if (gameManager)
-        {
-            gameManager.Inventory = this;
-        }
+        GameManager = GameObject.Find("GameManager")?.GetComponent<GameManager>();
 
         rect = scrollView.GetComponent<UnityEngine.UI.ScrollRect>();
 
@@ -59,13 +54,22 @@ public class Inventory : MonoBehaviour
     {
         playerDeck.Clear();
 
+        if (!CardPrefab) return;
+
         // 카드를 인스턴스로 생성해서 배열에 랜덤하게 집어 넣기
         for (int i = 0; i < myDeck.Count; ++i)
         {
-            playerDeck.Add(Instantiate(myDeck[i]));
-        }
+            GameObject obj = Instantiate(CardPrefab);
+            Card card = obj.GetComponent<Card>();
+            if (!card)
+            {
+                card = obj.AddComponent<Card>();
+            }
+            
+            card.SetUnitData(myDeck[i]);
 
-        Debug.Log("[Inventory : MakePlayerDeck] " + playerDeck.Count + " / " + myDeck.Count);
+            playerDeck.Add(card);
+        }
     }
 
     // 카드 분배 루프
@@ -88,10 +92,10 @@ public class Inventory : MonoBehaviour
             return;
 
         int index = Random.Range(0, playerDeck.Count);
-        GameObject obj = playerDeck[index];
+        Card card = playerDeck[index];
         playerDeck.RemoveAt(index);
 
-        TakeCard(obj?.GetComponent<Card>());
+        TakeCard(card);
     }
 
     // 카드 받기

@@ -29,6 +29,6 @@ public struct DamageData
     public int ApplyTo(Unit target)
     {
         // 계산식은 계속 복잡해질 예정
-        return Mathf.Max(physical - target.Armor, 0);
+        return Mathf.Max(physical - target.UnitData.Defence, 0);
     }
 }

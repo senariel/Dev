@@ -2,60 +2,91 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider))]
 public class Tile : MonoBehaviour
 {
-    // 파괴 가능 여부
-    public bool breakable = false;
-    public GameObject breakFX;
+    [HideInInspector] public TileData TileData;
 
-    private TileManager tileManager;
-    private ParticleSystem fx;
+    // 파괴 가능 여부
+    public bool IsBreakable { get; private set; }
 
     // 배치된 타일의 인덱스. Bottom 과 Upper 의 인덱스가 중복되는 것에 주의.
-    public int TileIndex {get; set;}
+    public int TileIndex { get; set; }
 
-    protected GameManager gameManager = null;
+    public GameManager GameManager { get; private set; }
+    public TileManager TileManager { get; private set; }
 
 
     protected virtual void Awake()
     {
-        
+        IsBreakable = (TileData.IsBreakable && gameObject.layer == LayerMask.NameToLayer("Tile_Upper"));
+
+        GameManager = GameObject.Find("GameManager").GetComponentInChildren<GameManager>();
+        TileManager = GameObject.Find("GameManager").GetComponentInChildren<TileManager>();
+    }
+
+    protected virtual void OnEnable()
+    {
+
     }
 
     // Start is called before the first frame update
     protected virtual void Start()
     {
-        GameObject obj = GameObject.Find("GameManager");
-        gameManager = obj?.GetComponent<GameManager>();
-        tileManager = gameManager?.TileManager;
     }
 
     // Update is called once per frame
     protected virtual void Update()
     {
-        if (fx)
-        {
-            Debug.Log("###");
-            //Destroy(fx.gameObject);
-            //Destroy(gameObject);
-        }
     }
 
+    protected virtual void OnDisable()
+    {
+
+    }
+
+    // 터치 시
     private void OnMouseDown()
     {
-        if (breakable)
+        // 파괴
+        if (IsBreakable && TileManager)
         {
-            Break();
+            // 타일매니저에게 보고
+            TileManager.NotifyBreakTile(this);
         }
     }
 
-    private void Break()
+    // from TileManager
+    // 파괴
+    public void Break()
     {
-        if (tileManager)
-        {
-            tileManager.BreakTile(this);
-        }
+        GetComponent<MeshRenderer>().enabled = false;
+        GetComponent<BoxCollider>().enabled = false;
+
+        StartCoroutine(OnBreak());
     }
 
-    public virtual void Enter(Unit unit)  {}
+    // 파괴 연출
+    protected IEnumerator OnBreak()
+    {
+        GameObject FXObj = Instantiate(TileData.BreakFX, transform.position, TileData.BreakFX.transform.rotation);
+        if (FXObj)
+        {
+            ParticleSystem fx = TileData.BreakFX.GetComponent<ParticleSystem>();
+            if (fx)
+            {
+                fx.Play(true);
+
+                yield return new WaitForSeconds(fx.main.duration);
+
+                fx.Stop();
+                Destroy(FXObj);
+            }
+        }
+
+        Destroy(gameObject);
+    }
+
+    public virtual bool CanEnter(Unit unit) { return false; }
+    public virtual void Enter(Unit unit) { }
 }
