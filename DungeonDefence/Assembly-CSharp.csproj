@@ -36,7 +36,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Unit.cs" />
+     <Compile Include="Assets\Scripts\Unit\Unit.cs" />
      <Compile Include="Assets\Scripts\Action\Action_Fight.cs" />
      <Compile Include="Assets\Scripts\Tiles\Tile_Start.cs" />
      <Compile Include="Assets\Store\UnityTechnologies\ParticlePack\Shared\Scripts\ProximityActivate.cs" />
