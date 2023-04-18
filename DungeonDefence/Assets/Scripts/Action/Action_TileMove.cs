@@ -129,6 +129,12 @@ public class Action_TileMove : Action
                 // step #3. 왼쪽 확인
                 dir = Quaternion.AngleAxis(-angle, Vector3.up) * direction;
                 index = FindMovableTileAround(tileIndex, dir, owner);
+                if (index == -1)
+                {
+                    // step #4. 뒤로 나오기
+                    dir = -direction;
+                    index = FindMovableTileAround(tileIndex, dir, owner);
+                }
             }
         }
 
