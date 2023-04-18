@@ -29,6 +29,8 @@ public class UnitData : ScriptableObject
     public List<Object> Actions;
     // 카드 이미지
     public Sprite CardImage; 
+    // 선호 이동 방향
+    public EPreferDirection PreferDirection;
 
 
     public Unit CreateUnit()

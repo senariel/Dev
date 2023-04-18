@@ -2,10 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using DDGame;
 
 [RequireComponent(typeof(NavMeshAgent)), DisallowMultipleComponent]
 public class Action_TileMove : Action
 {
+    public EPreferDirection PreferDirection { get; set; }
     protected NavMeshAgent navAgent = null;
     protected TileManager tileManager = null;
     protected int targetTileIndex = -1;
@@ -26,6 +28,8 @@ public class Action_TileMove : Action
     protected override void Start()
     {
         base.Start();
+
+        PreferDirection = (EPreferDirection)Random.Range(0, 2);
     }
 
     // Update is called once per frame
@@ -111,8 +115,9 @@ public class Action_TileMove : Action
     // return : Tile Index
     protected int FindNextTile(int tileIndex, Vector3 direction)
     {
-        // step #1. 오른쪽 확인
-        Vector3 dir = Quaternion.AngleAxis(90.0f, Vector3.up) * direction;
+        // step #1. 선호 방향 확인
+        float angle = PreferDirection == EPreferDirection.Right ? 90.0f : -90.0f;
+        Vector3 dir = Quaternion.AngleAxis(angle, Vector3.up) * direction;
         int index = FindMovableTileAround(tileIndex, dir, owner);
         if (index == -1)
         {
@@ -122,7 +127,7 @@ public class Action_TileMove : Action
             if (index == -1)
             {
                 // step #3. 왼쪽 확인
-                dir = Quaternion.AngleAxis(-90.0f, Vector3.up) * direction;
+                dir = Quaternion.AngleAxis(-angle, Vector3.up) * direction;
                 index = FindMovableTileAround(tileIndex, dir, owner);
             }
         }

@@ -26,6 +26,12 @@ namespace DDGame
         Finish,     // 종료지점
     }
 
+    public enum EPreferDirection
+    {
+        Left,
+        Right,
+    }
+
     public delegate void StageStateChangeEventHandler(EStageState newState);
 
     public delegate Tile GetTileHandler();
