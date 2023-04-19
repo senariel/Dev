@@ -23,6 +23,10 @@ public class UnitData : ScriptableObject
     public float AttackSpeed;
     // 공격 범위
     public int AttackRange;
+    // 이동 속도
+    public float Speed = 3.5f;
+    // 회전 속도(초당 회전 각)
+    public float AngularSpeed = 360.0f;
     // 팀 아이디
     public ETeamID TeamID;
     // 보유 액션
@@ -42,6 +46,9 @@ public class UnitData : ScriptableObject
         if (!unitInstance) 
             return null;
 
+        // 이름
+        unitInstance.name = UnitName;
+
         Unit unit = unitInstance.AddComponent(System.Type.GetType(Script.name)) as Unit;
         unit.UnitData = this;
 
@@ -52,24 +59,6 @@ public class UnitData : ScriptableObject
 
             // 액션 생성.
             unitInstance.AddComponent(System.Type.GetType(action.name));
-        }
-
-        // 필수 컴포넌트 추가
-        CapsuleCollider capsule = unitInstance.GetComponent<CapsuleCollider>();
-        if (capsule)
-        {
-            NavMeshAgent navAgent = unitInstance.GetComponent<NavMeshAgent>();
-            if (navAgent)
-            {
-                navAgent.radius = capsule.radius;
-                navAgent.height = capsule.height;
-            }
-        }
-
-        Rigidbody rb = unitInstance.GetComponent<Rigidbody>();
-        if (rb)
-        {
-            //rb.constraints = (RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ);
         }
 
         return unit;
