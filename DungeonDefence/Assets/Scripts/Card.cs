@@ -80,7 +80,7 @@ public class Card : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHand
         }
         else
         {
-            Destroy(unitInstance);
+            Destroy(unitInstance.gameObject);
             unitInstance = null;
         }
     }
